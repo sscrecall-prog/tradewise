@@ -1,0 +1,330 @@
+[
+  {
+    "id": "lesson-1-1",
+    "level": 1,
+    "levelTitle": "Level 1 — Foundations",
+    "title": "What is the Indian Stock Market?",
+    "slug": "what-is-indian-stock-market",
+    "readTime": "4 min read",
+    "summary": "Understand the core ecosystem: NSE, BSE, SEBI, Demat accounts, and how shares are traded.",
+    "contentMarkdown": "The Indian stock market is an organized marketplace where shares of publicly listed companies are traded.\\n\\n### Key Market Pillars in India:\\n1. **Stock Exchanges**: NSE (National Stock Exchange) and BSE (Bombay Stock Exchange).\\n2. **The Regulator — SEBI**: Protects investor interests and enforces fair practices.\\n3. **Depositories (CDSL & NSDL)**: Electronic vaults where shares are stored in digital Demat format.",
+    "exampleScenario": "When you buy 10 shares of Infosys on your broker app (e.g. Zerodha or Groww), the order routes to NSE. CDSL stores the shares in your Demat account.",
+    "keyTakeaways": [
+      "NSE and BSE are exchanges; SEBI is the regulatory authority.",
+      "Demat accounts hold shares electronically; Trading accounts are used to place orders.",
+      "Standard market hours in India are 09:15 AM to 03:30 PM IST (Mon-Fri)."
+    ],
+    "quiz": [
+      {
+        "id": "q-1-1",
+        "question": "Which regulatory authority oversees and regulates the Indian securities market?",
+        "options": [
+          "RBI",
+          "SEBI",
+          "IRDAI",
+          "Ministry of Finance"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "SEBI (Securities and Exchange Board of India) is the statutory regulatory body governing Indian capital markets."
+      },
+      {
+        "id": "q-1-2",
+        "question": "What is the primary role of a Demat account?",
+        "options": [
+          "To transfer money from your bank",
+          "To hold shares and securities in electronic format",
+          "To calculate intraday brokerage",
+          "To guarantee profit returns"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "A Demat (Dematerialized) account securely stores your financial instruments in digital form with CDSL or NSDL."
+      }
+    ],
+    "isCompleted": true,
+    "quizScore": 100
+  },
+  {
+    "id": "lesson-1-2",
+    "level": 1,
+    "levelTitle": "Level 1 — Foundations",
+    "title": "Order Types: Market, Limit, and Stop Loss",
+    "slug": "order-types-explained",
+    "readTime": "5 min read",
+    "summary": "Learn how Market Orders, Limit Orders, and SL (Stop-Loss) Orders protect your capital.",
+    "contentMarkdown": "Executing trades correctly requires picking the right order type.\\n\\n### 1. Market Order\\n- Executes immediately at the best available market price.\\n- Risk: High slippage during volatile sessions.\\n\\n### 2. Limit Order\\n- Executes only at your specified price or better.\\n- Advantage: Full price protection.\\n\\n### 3. Stop-Loss (SL) Order\\n- Automatic risk limiter that exits your position if the price moves against you.",
+    "exampleScenario": "Reliance trades at ₹2,980. You place a Limit Buy at ₹2,975 and an SL Order at ₹2,955. Your risk is strictly capped at ₹20/share.",
+    "keyTakeaways": [
+      "Always prefer Limit Orders over Market Orders during volatile morning openings.",
+      "Never enter a trade without a predefined active Stop Loss.",
+      "Slippage is the difference between your expected price and actual execution price."
+    ],
+    "quiz": [
+      {
+        "id": "q-1-3",
+        "question": "If you want to buy TCS only at ₹4,300 or lower, which order type should you place?",
+        "options": [
+          "Market Order",
+          "Limit Order",
+          "SL-Market at ₹4,350",
+          "Disclosed Order"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "A Limit Order guarantees you buy at ₹4,300 or cheaper, protecting you from paying higher."
+      }
+    ],
+    "isCompleted": true,
+    "quizScore": 100
+  },
+  {
+    "id": "lesson-1-3",
+    "level": 1,
+    "levelTitle": "Level 1 — Foundations",
+    "title": "Understanding Indian Trading Charges & Taxes",
+    "slug": "indian-trading-charges-stt-gst",
+    "readTime": "6 min read",
+    "summary": "Master the breakdown of Brokerage, STT, GST, Stamp Duty, and Exchange Turnover Fees.",
+    "contentMarkdown": "Trading costs directly impact your net profitability.\\n\\n### Charges Breakdown:\\n1. **Brokerage**: Flat ₹20/order with discount brokers.\\n2. **STT (Securities Transaction Tax)**: 0.025% on sell turnover (Intraday) or 0.1% on both legs (Delivery).\\n3. **Exchange Turnover**: ~0.00297% on turnover.\\n4. **GST**: 18% on (Brokerage + Exchange Fees + SEBI charges).\\n5. **Stamp Duty**: 0.003% on buy value (Intraday).",
+    "exampleScenario": "Buying 50 shares of Reliance at ₹2,500 and selling at ₹2,520 yields ₹1,000 gross profit. Charges equal ~₹42, resulting in ₹958 Net P&L.",
+    "keyTakeaways": [
+      "Overtrading racks up massive brokerage and STT even if gross P&L is neutral.",
+      "Net P&L = Gross P&L minus regulatory taxes and brokerage fees.",
+      "Always factor in breakeven points when planning scalp setups."
+    ],
+    "quiz": [
+      {
+        "id": "q-1-4",
+        "question": "On which side of an intraday equity trade is STT charged?",
+        "options": [
+          "Only on the Buy side",
+          "Only on the Sell side",
+          "On both Buy and Sell sides",
+          "STT is exempt for intraday"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "In Indian equity intraday trading, STT is levied at 0.025% solely on the sell-side turnover."
+      }
+    ],
+    "isCompleted": false
+  },
+  {
+    "id": "lesson-2-1",
+    "level": 2,
+    "levelTitle": "Level 2 — Technical Analysis",
+    "title": "Candlestick Anatomy & Core Price Action",
+    "slug": "candlestick-anatomy-and-price-action",
+    "readTime": "5 min read",
+    "summary": "Understand Open, High, Low, Close (OHLC) and how wick rejections signal supply and demand.",
+    "contentMarkdown": "Candlesticks show the battle between buyers and sellers.\\n\\n### Anatomy:\\n- **Body**: Range between Open and Close.\\n  - Green: Bullish close > open.\\n  - Red: Bearish close < open.\\n- **Upper Wick**: Selling rejection from peak.\\n- **Lower Wick**: Buying support from trough.",
+    "exampleScenario": "Tata Motors drops to ₹1,000 on high volume but buyers push it up to close at ₹1,024, leaving a long hammer wick. This demonstrates aggressive demand at ₹1,000.",
+    "keyTakeaways": [
+      "Candlestick wicks reveal where liquidity and price rejection occurred.",
+      "Never trade a candlestick pattern in isolation without contextual trend support.",
+      "Higher timeframes (15m, 1h, Daily) carry significantly higher reliability."
+    ],
+    "quiz": [
+      {
+        "id": "q-2-1",
+        "question": "What does a long lower shadow (wick) on a candlestick indicate?",
+        "options": [
+          "Sellers held total control",
+          "Buyers absorbed the sell-off and drove price higher",
+          "Market closed at the absolute day low",
+          "Volume was zero"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "A long lower wick indicates buying rejection of lower prices."
+      }
+    ],
+    "isCompleted": true,
+    "quizScore": 100
+  },
+  {
+    "id": "lesson-2-2",
+    "level": 2,
+    "levelTitle": "Level 2 — Technical Analysis",
+    "title": "Support and Resistance: Horizontal Supply & Demand",
+    "slug": "support-and-resistance-zones",
+    "readTime": "6 min read",
+    "summary": "Identify psychological price levels where price repeatedly pauses, reverses, or breaks out.",
+    "contentMarkdown": "Support and Resistance are price **zones**, not exact single rupee lines.\\n\\n### 1. Support (Floor)\\n- Price level where buying demand halts downward momentum.\\n\\n### 2. Resistance (Ceiling)\\n- Price level where selling pressure halts upward rallies.\\n\\n### Role Reversal:\\n- Broken resistance decisively turns into future support.",
+    "exampleScenario": "HDFC Bank bounces 3 times off ₹1,600. Once it breaks resistance at ₹1,660, that ₹1,660 level serves as new support on pullbacks.",
+    "keyTakeaways": [
+      "Treat S&R levels as zones of liquidity.",
+      "Broken resistance becomes new support.",
+      "High volume confirmation on breakout is essential."
+    ],
+    "quiz": [
+      {
+        "id": "q-2-2",
+        "question": "What happens when a major resistance level is broken with high volume?",
+        "options": [
+          "The level becomes invalid",
+          "The resistance level often turns into support on future pullbacks",
+          "The stock can never decline again",
+          "Exchange halts trading"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "The Role Reversal principle states that broken resistance frequently flips to become support."
+      }
+    ],
+    "isCompleted": false
+  },
+  {
+    "id": "lesson-2-3",
+    "level": 2,
+    "levelTitle": "Level 2 — Technical Analysis",
+    "title": "Core Indicators: EMA, RSI, and VWAP",
+    "slug": "core-technical-indicators",
+    "readTime": "7 min read",
+    "summary": "Use indicators as objective confirmation filters, not as magical crystal balls.",
+    "contentMarkdown": "Indicators confirm trends and momentum.\\n\\n### 1. EMA (Exponential Moving Average)\\n- 20 EMA: Short-term momentum.\\n- 200 EMA: Major trend filter.\\n\\n### 2. RSI (Relative Strength Index)\\n- Measures velocity (0-100). Above 60 is bullish momentum.\\n\\n### 3. VWAP (Volume Weighted Average Price)\\n- Institutional benchmark for intraday trend direction.",
+    "exampleScenario": "Tata Motors holds above VWAP and tests the 20 EMA at ₹1,015. A bullish reversal candle provides a high-probability long entry.",
+    "keyTakeaways": [
+      "VWAP is the premier benchmark for intraday equity direction.",
+      "Indicators confirm price structure; they do not dictate it.",
+      "Keep your chart clean with 2-3 complimentary tools."
+    ],
+    "quiz": [
+      {
+        "id": "q-2-3",
+        "question": "Why is VWAP critical for intraday equity traders?",
+        "options": [
+          "It guarantees profits",
+          "Institutional algorithms use it as a true volume-weighted benchmark",
+          "It eliminates taxes",
+          "It only works after 3 PM"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "VWAP reflects the true average price weighted by institutional volume."
+      }
+    ],
+    "isCompleted": false
+  },
+  {
+    "id": "lesson-3-1",
+    "level": 3,
+    "levelTitle": "Level 3 — Trading Strategy & Risk",
+    "title": "The Mathematics of Risk-to-Reward (R:R)",
+    "slug": "risk-to-reward-mathematics",
+    "readTime": "6 min read",
+    "summary": "Learn why a 40% win rate can make you consistently profitable with proper 1:2 or 1:3 R:R.",
+    "contentMarkdown": "Winning trading is about asymmetric risk-reward math.\\n\\n### The Math:\\nTake 10 trades risking ₹1,000 with 1:2 R:R:\\n- **4 Wins (40%)**: 4 × ₹2,000 = +₹8,000\\n- **6 Losses (60%)**: 6 × ₹1,000 = -₹6,000\\n- **Net Profit**: +₹2,000 Net Gain!\\n\\n### Minimum Standard:\\nNever enter a setup with less than 1:1.5 (preferably 1:2) R:R.",
+    "exampleScenario": "Entry: ₹500, Stop Loss: ₹490 (Risk: ₹10), Target: ₹520 (Reward: ₹20). R:R is 1:2.",
+    "keyTakeaways": [
+      "High win rate is useless if average loss exceeds average win.",
+      "With 1:2 R:R, you only need to be right 34% of the time to break even.",
+      "Always calculate exit targets before clicking buy."
+    ],
+    "quiz": [
+      {
+        "id": "q-3-1",
+        "question": "If you risk ₹500 to make ₹1,500, what is the Risk to Reward ratio?",
+        "options": [
+          "1 : 1",
+          "1 : 2",
+          "1 : 3",
+          "3 : 1"
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Risk ₹500 : Reward ₹1,500 gives 1 : 3 ratio."
+      }
+    ],
+    "isCompleted": true,
+    "quizScore": 100
+  },
+  {
+    "id": "lesson-3-2",
+    "level": 3,
+    "levelTitle": "Level 3 — Trading Strategy & Risk",
+    "title": "Position Sizing & The 1% Risk Rule",
+    "slug": "position-sizing-one-percent-rule",
+    "readTime": "6 min read",
+    "summary": "How to calculate exact share quantity so no single trade can ever damage your capital.",
+    "contentMarkdown": "Position sizing protects your capital from catastrophic drawdowns.\\n\\n### Formula:\\nSuggested Quantity = Floor(Max Risk Amount / Risk Per Share)\\n\\n### Example:\\n- Capital: ₹1,00,000\\n- Max Risk (1%): ₹1,000\\n- Entry: ₹1,250, Stop Loss: ₹1,230 (Risk/share = ₹20)\\n- **Quantity**: ₹1,000 / ₹20 = 50 shares\\n- **Position Value**: 50 × ₹1,250 = ₹62,500",
+    "exampleScenario": "With ₹1,00,000 capital, risking ₹1,000 on a ₹20 SL stock means purchasing exactly 50 shares.",
+    "keyTakeaways": [
+      "Derive share quantity from stop loss distance, never from gut feeling.",
+      "The 1% rule enables you to survive 20 consecutive losses with 80%+ capital intact.",
+      "Never allocate position size beyond risk parameters."
+    ],
+    "quiz": [
+      {
+        "id": "q-3-2",
+        "question": "With ₹1,00,000 capital and 1% risk limit (₹1,000), if Entry is ₹500 and Stop Loss is ₹480, what is your suggested quantity?",
+        "options": [
+          "25 shares",
+          "50 shares",
+          "100 shares",
+          "200 shares"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Risk/share = ₹20. Max risk = ₹1,000. 1000 / 20 = 50 shares."
+      }
+    ],
+    "isCompleted": true,
+    "quizScore": 100
+  },
+  {
+    "id": "lesson-4-1",
+    "level": 4,
+    "levelTitle": "Level 4 — Psychology & Discipline",
+    "title": "Overcoming FOMO and The Revenge Trading Trap",
+    "slug": "overcoming-fomo-and-revenge-trading",
+    "readTime": "6 min read",
+    "summary": "Recognize emotional triggers that cause beginners to blow accounts and implement circuit breakers.",
+    "contentMarkdown": "Trading psychology is 80% of long-term success.\\n\\n### Destructive Traps:\\n1. **FOMO**: Chasing extended moves at peaks without an entry trigger.\\n2. **Revenge Trading**: Angrily taking oversized trades after a loss.\\n\\n### Rules of Discipline:\\n- Max 2 trades per day.\\n- Daily loss limit circuit breaker: when hit, close terminal immediately.",
+    "exampleScenario": "After losing ₹500 on trade #1, taking a reckless oversized second trade resulting in ₹3,500 loss is classic revenge trading.",
+    "keyTakeaways": [
+      "Accepting a small planned loss is the hallmark of a professional.",
+      "Missing a move costs ₹0; chasing bad moves costs real money.",
+      "A daily stop loss limit protects you from emotional spiral."
+    ],
+    "quiz": [
+      {
+        "id": "q-4-1",
+        "question": "What is the most disciplined action to take after hitting your maximum daily loss limit?",
+        "options": [
+          "Double position size to recover",
+          "Shut down trading terminal and review journal after market hours",
+          "Switch to high-risk options",
+          "Average down"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Shutting down the terminal preserves capital and stops emotional destruction."
+      }
+    ],
+    "isCompleted": true,
+    "quizScore": 100
+  },
+  {
+    "id": "lesson-4-2",
+    "level": 4,
+    "levelTitle": "Level 4 — Psychology & Discipline",
+    "title": "The Pre-Trade Checklist & Journaling Routine",
+    "slug": "pre-trade-checklist-and-journaling",
+    "readTime": "5 min read",
+    "summary": "Build an ironclad daily process: Plan before execution, review after closing.",
+    "contentMarkdown": "Follow the loop: **LEARN → PLAN → PRACTICE → JOURNAL → ANALYZE → IMPROVE**.\\n\\n### The 8-Point Pre-Trade Checklist:\\n1. Setup Known\\n2. Entry Predefined\\n3. Stop Loss Predefined\\n4. Target Predefined\\n5. Risk within 1% limit\\n6. Risk/Reward >= 1:1.5\\n7. No FOMO\\n8. No Revenge trading",
+    "exampleScenario": "Before clicking Buy, you complete the 8-point checklist in TRADEWISE. At 3:30 PM, you record your emotion and execution score.",
+    "keyTakeaways": [
+      "Never execute without completing your pre-trade checklist.",
+      "Your journal reveals objective patterns in your performance.",
+      "Measure success by process adherence, not individual trade outcome."
+    ],
+    "quiz": [
+      {
+        "id": "q-4-2",
+        "question": "What is the primary benefit of maintaining a comprehensive trading journal?",
+        "options": [
+          "To show off on social media",
+          "To identify recurring behavioral mistakes and analyze which setups yield real positive expectancy",
+          "To get automatic buy signals",
+          "To avoid taxes"
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Journaling provides objective data on your emotional patterns and setup profitability."
+      }
+    ],
+    "isCompleted": false
+  }
+]
