@@ -641,11 +641,13 @@ export class DemoDataSeeder {
   static getInitialPaperPortfolio(): PaperPortfolio {
     return {
       initialCapital: 100000,
-      cashBalance: 78500,
-      usedMargin: 21500,
+      cashBalance: 89069.50,
+      usedMargin: 10930.50,
       realizedPnL: 4250,
-      unrealizedPnL: 580,
-      totalPortfolioValue: 104830
+      unrealizedPnL: 820.25,
+      totalPortfolioValue: 105070.25,
+      totalChargesPaid: 248.50,
+      totalTradesCount: 7
     };
   }
 
@@ -656,30 +658,38 @@ export class DemoDataSeeder {
         stockSymbol: 'RELIANCE',
         stockName: 'Reliance Industries Ltd.',
         direction: 'BUY',
-        quantity: 5,
+        quantity: 10,
         avgPrice: 2960.00,
         currentPrice: 2985.40,
         stopLoss: 2940.00,
         targetPrice: 3000.00,
-        unrealizedPnL: 127.00,
+        unrealizedPnL: 254.00,
         unrealizedPnLPercent: 0.86,
         productType: 'INTRADAY (MIS)',
-        openedAt: '2026-09-01T09:35:00Z'
+        openedAt: '2026-09-01T09:35:00Z',
+        marginAllocated: 5920.00,
+        leverage: 5,
+        buyCharges: 21.40,
+        netPnL: 232.60
       },
       {
         id: 'pos-2',
         stockSymbol: 'TATAMOTORS',
         stockName: 'Tata Motors Ltd.',
         direction: 'BUY',
-        quantity: 20,
+        quantity: 25,
         avgPrice: 1002.10,
         currentPrice: 1024.75,
         stopLoss: 990.00,
         targetPrice: 1030.00,
-        unrealizedPnL: 453.00,
+        unrealizedPnL: 566.25,
         unrealizedPnLPercent: 2.26,
         productType: 'INTRADAY (MIS)',
-        openedAt: '2026-09-01T10:05:00Z'
+        openedAt: '2026-09-01T10:05:00Z',
+        marginAllocated: 5010.50,
+        leverage: 5,
+        buyCharges: 18.25,
+        netPnL: 548.00
       }
     ];
   }
@@ -693,13 +703,26 @@ export class DemoDataSeeder {
         direction: 'BUY',
         orderType: 'MARKET',
         productType: 'INTRADAY (MIS)',
-        quantity: 5,
+        quantity: 10,
         price: 2960.00,
         executedPrice: 2960.00,
         stopLoss: 2940.00,
         targetPrice: 3000.00,
         status: 'EXECUTED',
-        timestamp: '2026-09-01 09:35:12'
+        timestamp: '2026-09-01 09:35:12',
+        marginRequired: 5920.00,
+        turnover: 29600.00,
+        contractNoteId: 'CN-884210',
+        charges: {
+          brokerage: 8.88,
+          stt: 0,
+          exchangeCharges: 0.88,
+          gst: 1.76,
+          sebiCharges: 0.03,
+          stampDuty: 0.89,
+          totalCharges: 12.44,
+          breakevenPoints: 1.24
+        }
       },
       {
         id: 'ord-2',
@@ -708,13 +731,26 @@ export class DemoDataSeeder {
         direction: 'BUY',
         orderType: 'MARKET',
         productType: 'INTRADAY (MIS)',
-        quantity: 20,
+        quantity: 25,
         price: 1002.10,
         executedPrice: 1002.10,
         stopLoss: 990.00,
         targetPrice: 1030.00,
         status: 'EXECUTED',
-        timestamp: '2026-09-01 10:05:44'
+        timestamp: '2026-09-01 10:05:44',
+        marginRequired: 5010.50,
+        turnover: 25052.50,
+        contractNoteId: 'CN-884211',
+        charges: {
+          brokerage: 7.52,
+          stt: 0,
+          exchangeCharges: 0.74,
+          gst: 1.49,
+          sebiCharges: 0.03,
+          stampDuty: 0.75,
+          totalCharges: 10.53,
+          breakevenPoints: 0.42
+        }
       },
       {
         id: 'ord-3',
@@ -728,7 +764,20 @@ export class DemoDataSeeder {
         stopLoss: 1815.00,
         targetPrice: 1860.00,
         status: 'PENDING',
-        timestamp: '2026-09-01 11:20:00'
+        timestamp: '2026-09-01 11:20:00',
+        marginRequired: 5490.00,
+        turnover: 27450.00,
+        contractNoteId: 'CN-884212',
+        charges: {
+          brokerage: 8.24,
+          stt: 0,
+          exchangeCharges: 0.82,
+          gst: 1.63,
+          sebiCharges: 0.03,
+          stampDuty: 0.82,
+          totalCharges: 11.54,
+          breakevenPoints: 0.77
+        }
       }
     ];
   }

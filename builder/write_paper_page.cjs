@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from 'react';
+﻿const fs = require('fs');
+const chunks = [];
+
+chunks.push(`import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { useMarketData } from '../context/MarketDataContext';
 import { Button } from '../components/common/Button';
@@ -120,7 +123,8 @@ export const PaperTradingPage: React.FC = () => {
       return matchesSearch && matchesStatus;
     });
   }, [paperOrders, searchQuery, orderStatusFilter]);
-
+`);
+chunks.push(`
   // Calculations for summary banner
   const totalUnrealizedPnL = livePositions.reduce((acc, p) => acc + p.unrealizedPnL, 0);
   const totalMarginBlocked = livePositions.reduce((acc, p) => acc + p.marginAllocated, 0);
@@ -144,7 +148,7 @@ export const PaperTradingPage: React.FC = () => {
 
   const handleSquareOffAll = async () => {
     if (livePositions.length === 0) return;
-    if (window.confirm(`Are you sure you want to Square Off all ${livePositions.length} open position(s) at current market prices?`)) {
+    if (window.confirm(\`Are you sure you want to Square Off all \${livePositions.length} open position(s) at current market prices?\`)) {
       setIsSquaringAll(true);
       try {
         await squareOffAllPositions();
@@ -245,10 +249,10 @@ export const PaperTradingPage: React.FC = () => {
               variant="danger"
               size="sm"
               icon={<Zap className="w-3.5 h-3.5" />}
-              disabled={isSquaringAll}
+              isLoading={isSquaringAll}
               onClick={handleSquareOffAll}
             >
-              {isSquaringAll ? "Squaring Off..." : `Square Off All (${livePositions.length})`}
+              Square Off All ({livePositions.length})
             </Button>
           )}
 
@@ -283,7 +287,7 @@ export const PaperTradingPage: React.FC = () => {
             )}
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className={`text-2xl font-black ${isOverallPositive ? 'text-brand-positive' : 'text-brand-negative'}`}>
+            <span className={\`text-2xl font-black \${isOverallPositive ? 'text-brand-positive' : 'text-brand-negative'}\`}>
               {isOverallPositive ? '+₹' : '-₹'}{Math.abs(totalGrossPnL).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
@@ -329,8 +333,8 @@ export const PaperTradingPage: React.FC = () => {
           </div>
           <div className="mt-3 w-full bg-bg-secondary rounded-full h-1.5 overflow-hidden border border-border-subtle">
             <div
-              className={`h-full transition-all duration-300 ${marginUtilizedPct > 80 ? 'bg-brand-negative' : 'bg-brand-accent'}`}
-              style={{ width: `${marginUtilizedPct}%` }}
+              className={\`h-full transition-all duration-300 \${marginUtilizedPct > 80 ? 'bg-brand-negative' : 'bg-brand-accent'}\`}
+              style={{ width: \`\${marginUtilizedPct}%\` }}
             />
           </div>
         </div>
@@ -357,16 +361,17 @@ export const PaperTradingPage: React.FC = () => {
           </div>
         </div>
       </div>
-
+`);
+chunks.push(`
       {/* Angel One & Zerodha Style Terminal Tabs */}
       <div className="flex border-b border-border-subtle gap-1 overflow-x-auto">
         <button
           onClick={() => setActiveTab('positions')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
+          className={\`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap \${
             activeTab === 'positions'
               ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+          }\`}
         >
           <Layers className="w-4 h-4" />
           Positions ({livePositions.length})
@@ -374,11 +379,11 @@ export const PaperTradingPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('holdings')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
+          className={\`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap \${
             activeTab === 'holdings'
               ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+          }\`}
         >
           <Briefcase className="w-4 h-4" />
           Holdings ({holdingsPositions.length})
@@ -386,11 +391,11 @@ export const PaperTradingPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('orders')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
+          className={\`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap \${
             activeTab === 'orders'
               ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+          }\`}
         >
           <Clock className="w-4 h-4" />
           Order Book ({paperOrders.length})
@@ -398,11 +403,11 @@ export const PaperTradingPage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('funds')}
-          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
+          className={\`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap \${
             activeTab === 'funds'
               ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+          }\`}
         >
           <Wallet className="w-4 h-4" />
           Funds & Taxes
@@ -433,11 +438,11 @@ export const PaperTradingPage: React.FC = () => {
                   <button
                     key={p}
                     onClick={() => setProductFilter(p)}
-                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                    className={\`px-3 py-1 rounded-lg font-semibold transition-all \${
                       productFilter === p
                         ? 'bg-brand-accent text-white shadow-sm'
                         : 'text-text-secondary hover:text-text-primary'
-                    }`}
+                    }\`}
                   >
                     {p === 'MIS' ? 'MIS (5x Intraday)' : p === 'CNC' ? 'CNC (Delivery)' : 'All Products'}
                   </button>
@@ -559,17 +564,17 @@ export const PaperTradingPage: React.FC = () => {
 
                           {/* Gross Unrealized P&L */}
                           <td className="p-3.5 text-right whitespace-nowrap">
-                            <div className={`font-mono font-bold text-sm ${isProfit ? 'text-brand-positive' : 'text-brand-negative'}`}>
+                            <div className={\`font-mono font-bold text-sm \${isProfit ? 'text-brand-positive' : 'text-brand-negative'}\`}>
                               {isProfit ? '+₹' : '-₹'}{Math.abs(pos.unrealizedPnL).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                             </div>
-                            <div className={`text-[10px] font-mono ${isProfit ? 'text-brand-positive' : 'text-brand-negative'}`}>
+                            <div className={\`text-[10px] font-mono \${isProfit ? 'text-brand-positive' : 'text-brand-negative'}\`}>
                               {isProfit ? '+' : ''}{pos.unrealizedPnLPercent}%
                             </div>
                           </td>
 
                           {/* Estimated Net P&L after taxes */}
                           <td className="p-3.5 text-right whitespace-nowrap">
-                            <div className={`font-mono font-semibold ${isNetProfit ? 'text-brand-positive/90' : 'text-brand-negative/90'}`}>
+                            <div className={\`font-mono font-semibold \${isNetProfit ? 'text-brand-positive/90' : 'text-brand-negative/90'}\`}>
                               {isNetProfit ? '+₹' : '-₹'}{Math.abs(pos.netPnL || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                             </div>
                             <div className="text-[9px] text-text-muted">
@@ -585,9 +590,9 @@ export const PaperTradingPage: React.FC = () => {
                                 className="text-[11px] font-mono hover:text-brand-accent underline text-text-secondary flex items-center gap-1"
                                 title="Click to set/modify Stop Loss and Target"
                               >
-                                <span>SL: {pos.stopLoss ? `₹${pos.stopLoss}` : '--'}</span>
+                                <span>SL: {pos.stopLoss ? \`₹\${pos.stopLoss}\` : '--'}</span>
                                 <span>•</span>
-                                <span>Tgt: {pos.targetPrice ? `₹${pos.targetPrice}` : '--'}</span>
+                                <span>Tgt: {pos.targetPrice ? \`₹\${pos.targetPrice}\` : '--'}</span>
                               </button>
                             </div>
                           </td>
@@ -608,9 +613,10 @@ export const PaperTradingPage: React.FC = () => {
                                 variant="danger"
                                 size="sm"
                                 disabled={closingId === pos.id}
+                                isLoading={closingId === pos.id}
                                 onClick={() => handleClose(pos.id)}
                               >
-                                {closingId === pos.id ? "Closing..." : "Square Off"}
+                                Square Off
                               </Button>
                             </div>
                           </td>
@@ -638,7 +644,7 @@ export const PaperTradingPage: React.FC = () => {
                   </div>
                   <div>
                     <span>Open Gross P&L: </span>
-                    <span className={`font-extrabold font-mono ${totalUnrealizedPnL >= 0 ? 'text-brand-positive' : 'text-brand-negative'}`}>
+                    <span className={\`font-extrabold font-mono \${totalUnrealizedPnL >= 0 ? 'text-brand-positive' : 'text-brand-negative'}\`}>
                       {totalUnrealizedPnL >= 0 ? '+₹' : '-₹'}{Math.abs(Math.round(totalUnrealizedPnL)).toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -648,17 +654,18 @@ export const PaperTradingPage: React.FC = () => {
                   variant="danger"
                   size="sm"
                   icon={<Zap className="w-3.5 h-3.5" />}
-                  disabled={isSquaringAll}
+                  isLoading={isSquaringAll}
                   onClick={handleSquareOffAll}
                 >
-                  {isSquaringAll ? "Squaring Off..." : "Square Off All Positions"}
+                  Square Off All Positions
                 </Button>
               </div>
             </div>
           )}
         </div>
       )}
-
+`);
+chunks.push(`
       {/* ======================================================== */}
       {/* TAB 2: HOLDINGS (DELIVERY CNC PORTFOLIO)                 */}
       {/* ======================================================== */}
@@ -789,11 +796,11 @@ export const PaperTradingPage: React.FC = () => {
                 <button
                   key={st}
                   onClick={() => setOrderStatusFilter(st)}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  className={\`px-3 py-1 rounded-lg font-semibold transition-all \${
                     orderStatusFilter === st
                       ? 'bg-brand-accent text-white shadow-sm'
                       : 'text-text-secondary hover:text-text-primary'
-                  }`}
+                  }\`}
                 >
                   {st === 'ALL' ? 'All Orders' : st}
                 </button>
@@ -942,7 +949,8 @@ export const PaperTradingPage: React.FC = () => {
           )}
         </div>
       )}
-
+`);
+chunks.push(`
       {/* ======================================================== */}
       {/* TAB 4: FUNDS, MARGINS & TAX LEDGER                       */}
       {/* ======================================================== */}
@@ -983,7 +991,7 @@ export const PaperTradingPage: React.FC = () => {
 
                 <div className="flex justify-between items-center text-xs py-2 border-b border-border-subtle">
                   <span className="text-text-secondary">Total Realized Profit/Loss</span>
-                  <span className={`font-bold font-mono ${paperPortfolio.realizedPnL >= 0 ? 'text-brand-positive' : 'text-brand-negative'}`}>
+                  <span className={\`font-bold font-mono \${paperPortfolio.realizedPnL >= 0 ? 'text-brand-positive' : 'text-brand-negative'}\`}>
                     {paperPortfolio.realizedPnL >= 0 ? '+₹' : '-₹'}{Math.abs(Math.round(paperPortfolio.realizedPnL)).toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -1123,7 +1131,7 @@ export const PaperTradingPage: React.FC = () => {
               <span>Modify Stop Loss & Target</span>
             </div>
           }
-          subtitle={`${editingPosition.stockSymbol} • ${editingPosition.productType} • Qty: ${editingPosition.quantity}`}
+          subtitle={\`\${editingPosition.stockSymbol} • \${editingPosition.productType} • Qty: \${editingPosition.quantity}\`}
           maxWidth="md"
         >
           <form onSubmit={handleSaveSLTarget} className="space-y-4">
@@ -1216,13 +1224,13 @@ export const PaperTradingPage: React.FC = () => {
                     key={amt}
                     type="button"
                     onClick={() => setCustomFundAmount(amt.toString())}
-                    className={`p-2.5 rounded-xl border text-xs font-mono font-bold transition-all ${
+                    className={\`p-2.5 rounded-xl border text-xs font-mono font-bold transition-all \${
                       customFundAmount === amt.toString()
                         ? 'bg-brand-accent text-white border-brand-accent'
                         : 'bg-bg-secondary text-text-primary border-border-subtle hover:border-border-default'
-                    }`}
+                    }\`}
                   >
-                    +₹{(amt / 100000) >= 1 ? `${amt / 100000} Lakh` : `${amt / 1000}k`}
+                    +₹{(amt / 100000) >= 1 ? \`\${amt / 100000} Lakh\` : \`\${amt / 1000}k\`}
                   </button>
                 ))}
               </div>
@@ -1262,3 +1270,7 @@ export const PaperTradingPage: React.FC = () => {
     </div>
   );
 };
+`);
+
+fs.writeFileSync('src/pages/PaperTradingPage.tsx', chunks.join(''), 'utf8');
+console.log('Successfully written src/pages/PaperTradingPage.tsx from chunks!');

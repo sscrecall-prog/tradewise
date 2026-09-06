@@ -15,9 +15,15 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { NewTradeModal } from "./components/modals/NewTradeModal";
 import { StockDetailModal } from "./components/modals/StockDetailModal";
 import { PlaceOrderModal } from "./components/modals/PlaceOrderModal";
+import { ContractNoteModal } from "./components/modals/ContractNoteModal";
 
 export const App: React.FC = () => {
-  const { activeTab } = useApp();
+  const {
+    activeTab,
+    selectedContractNoteOrder,
+    isContractNoteModalOpen,
+    setIsContractNoteModalOpen
+  } = useApp();
 
   const renderActivePage = () => {
     switch (activeTab) {
@@ -54,6 +60,11 @@ export const App: React.FC = () => {
       <NewTradeModal />
       <StockDetailModal />
       <PlaceOrderModal />
+      <ContractNoteModal
+        order={selectedContractNoteOrder}
+        isOpen={isContractNoteModalOpen}
+        onClose={() => setIsContractNoteModalOpen(false)}
+      />
     </AppLayout>
   );
 };

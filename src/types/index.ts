@@ -133,20 +133,36 @@ export interface PsychologyEntry {
   notes?: string;
 }
 
+export interface OrderChargesBreakdown {
+  brokerage: number;
+  stt: number;
+  exchangeCharges: number;
+  gst: number;
+  sebiCharges: number;
+  stampDuty: number;
+  totalCharges: number;
+  breakevenPoints?: number;
+}
+
 export interface PaperOrder {
   id: string;
   stockSymbol: string;
   stockName: string;
   direction: TradeDirection;
-  orderType: 'MARKET' | 'LIMIT';
+  orderType: 'MARKET' | 'LIMIT' | 'SL' | 'SL-M';
   productType: 'INTRADAY (MIS)' | 'DELIVERY (CNC)';
   quantity: number;
   price: number;
+  triggerPrice?: number;
   targetPrice?: number;
   stopLoss?: number;
   status: 'PENDING' | 'EXECUTED' | 'CANCELLED';
   timestamp: string;
   executedPrice?: number;
+  marginRequired?: number;
+  turnover?: number;
+  charges?: OrderChargesBreakdown;
+  contractNoteId?: string;
 }
 
 export interface PaperPosition {
@@ -163,6 +179,10 @@ export interface PaperPosition {
   unrealizedPnLPercent: number;
   productType: 'INTRADAY (MIS)' | 'DELIVERY (CNC)';
   openedAt: string;
+  marginAllocated: number;
+  leverage: number;
+  buyCharges: number;
+  netPnL?: number;
 }
 
 export interface PaperPortfolio {
@@ -172,6 +192,8 @@ export interface PaperPortfolio {
   realizedPnL: number;
   unrealizedPnL: number;
   totalPortfolioValue: number;
+  totalChargesPaid?: number;
+  totalTradesCount?: number;
 }
 
 export interface TradingPreferences {

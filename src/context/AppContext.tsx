@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import {
   JournalEntry,
   TradePlan,
+  TradeDirection,
   PaperOrder,
   PaperPosition,
   PaperPortfolio,
@@ -39,6 +40,14 @@ interface AppContextType {
   placePaperOrder: (order: Omit<PaperOrder, "id" | "timestamp" | "status">) => Promise<void>;
   closePaperPosition: (positionId: string, exitPrice?: number) => Promise<void>;
   resetPaperTrading: () => Promise<void>;
+  addVirtualFunds: (amount: number) => Promise<void>;
+  squareOffAllPositions: () => Promise<void>;
+  cancelPaperOrder: (orderId: string) => Promise<void>;
+  modifyPaperPositionSLTarget: (positionId: string, stopLoss?: number, targetPrice?: number) => Promise<void>;
+  selectedContractNoteOrder: PaperOrder | null;
+  setSelectedContractNoteOrder: (order: PaperOrder | null) => void;
+  isContractNoteModalOpen: boolean;
+  setIsContractNoteModalOpen: (open: boolean) => void;
 
   academyLessons: AcademyLesson[];
   completeAcademyLesson: (lessonId: string, quizScore?: number) => Promise<void>;
@@ -101,6 +110,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activePlanForChecklist, setActivePlanForChecklist] = useState<Partial<TradePlan> | null>(null);
   const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
   const [selectedStockForOrder, setSelectedStockForOrder] = useState<string | null>(null);
+  const [selectedContractNoteOrder, setSelectedContractNoteOrder] = useState<PaperOrder | null>(null);
+  const [isContractNoteModalOpen, setIsContractNoteModalOpen] = useState(false);
 
   const initializeAppState = useCallback(async () => {
     try {
@@ -160,13 +171,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const priceDiff = pos.direction === "BUY" ? (currentPrice - pos.avgPrice) : (pos.avgPrice - currentPrice);
       const unrealizedPnL = Math.round(priceDiff * pos.quantity * 100) / 100;
       const unrealizedPnLPercent = Math.round((priceDiff / pos.avgPrice) * 10000) / 100;
+      const netPnL = Math.round((unrealizedPnL - (pos.buyCharges || 0)) * 100) / 100;
       totalUnrealized += unrealizedPnL;
 
       return {
         ...pos,
         currentPrice,
         unrealizedPnL,
-        unrealizedPnLPercent
+        unrealizedPnLPercent,
+        netPnL
       };
     });
 
@@ -250,107 +263,94 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const placePaperOrder = async (orderData: Omit<PaperOrder, "id" | "timestamp" | "status">) => {
     const id = "ord-" + Date.now();
     const timestamp = new Date().toLocaleString("en-IN");
-    const orderCost = orderData.price * orderData.quantity;
+    const isIntraday = orderData.productType === "INTRADAY (MIS)";
+    const leverage = isIntraday ? 5 : 1;
+    const turnover = Math.round(orderData.price * orderData.quantity * 100) / 100;
+    const requiredMargin = Math.round((turnover / leverage) * 100) / 100;
 
-    if (orderData.direction === "BUY" && orderCost > paperPortfolio.cashBalance) {
-      alert("Insufficient virtual cash balance for this order.");
+    // Calculate realistic Indian broker charges (Zerodha / Angel One style)
+    const charges = TradingCalculationService.calculateOrderCharges(
+      orderData.price,
+      orderData.quantity,
+      orderData.direction,
+      isIntraday
+    );
+
+    const totalDeduction = requiredMargin + charges.totalCharges;
+
+    if (totalDeduction > paperPortfolio.cashBalance) {
+      alert(`Insufficient available margin. Required: ₹${totalDeduction.toLocaleString("en-IN")} (Margin: ₹${requiredMargin.toLocaleString("en-IN")} + Charges: ₹${charges.totalCharges.toFixed(2)}), Available Cash: ₹${paperPortfolio.cashBalance.toLocaleString("en-IN")}`);
       return;
     }
+
+    const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
 
     const order: PaperOrder = {
       ...orderData,
       id,
       timestamp,
       status: "EXECUTED",
-      executedPrice: orderData.price
+      executedPrice: orderData.price,
+      marginRequired: requiredMargin,
+      turnover,
+      charges,
+      contractNoteId
     };
 
     const newOrders = [order, ...paperOrders];
     setPaperOrders(newOrders);
     await StorageService.save("paperOrders", order);
 
+    // Existing position lookup
     const existingPosIndex = paperPositions.findIndex(
       p => p.stockSymbol === order.stockSymbol && p.direction === order.direction && p.productType === order.productType
     );
 
     let updatedPositions: PaperPosition[];
-    let newCash = paperPortfolio.cashBalance;
-    let newUsedMargin = paperPortfolio.usedMargin;
+    const newCash = Math.round((paperPortfolio.cashBalance - totalDeduction) * 100) / 100;
+    const newUsedMargin = Math.round((paperPortfolio.usedMargin + requiredMargin) * 100) / 100;
+    const newTotalCharges = Math.round(((paperPortfolio.totalChargesPaid || 0) + charges.totalCharges) * 100) / 100;
+    const newTradesCount = (paperPortfolio.totalTradesCount || 0) + 1;
 
-    if (order.direction === "BUY") {
-      newCash -= orderCost;
-      newUsedMargin += orderCost;
+    if (existingPosIndex >= 0) {
+      const existing = paperPositions[existingPosIndex];
+      const totalQty = existing.quantity + order.quantity;
+      const totalCost = existing.avgPrice * existing.quantity + order.price * order.quantity;
+      const newAvg = Math.round((totalCost / totalQty) * 100) / 100;
+      const combinedMargin = Math.round((existing.marginAllocated + requiredMargin) * 100) / 100;
+      const combinedBuyCharges = Math.round((existing.buyCharges + charges.totalCharges) * 100) / 100;
 
-      if (existingPosIndex >= 0) {
-        const existing = paperPositions[existingPosIndex];
-        const totalQty = existing.quantity + order.quantity;
-        const totalCost = existing.avgPrice * existing.quantity + order.price * order.quantity;
-        const newAvg = Math.round((totalCost / totalQty) * 100) / 100;
-
-        updatedPositions = [...paperPositions];
-        updatedPositions[existingPosIndex] = {
-          ...existing,
-          quantity: totalQty,
-          avgPrice: newAvg,
-          stopLoss: order.stopLoss || existing.stopLoss,
-          targetPrice: order.targetPrice || existing.targetPrice
-        };
-      } else {
-        const newPos: PaperPosition = {
-          id: "pos-" + Date.now(),
-          stockSymbol: order.stockSymbol,
-          stockName: order.stockName,
-          direction: order.direction,
-          quantity: order.quantity,
-          avgPrice: order.price,
-          currentPrice: order.price,
-          stopLoss: order.stopLoss,
-          targetPrice: order.targetPrice,
-          unrealizedPnL: 0,
-          unrealizedPnLPercent: 0,
-          productType: order.productType,
-          openedAt: new Date().toISOString()
-        };
-        updatedPositions = [newPos, ...paperPositions];
-      }
+      updatedPositions = [...paperPositions];
+      updatedPositions[existingPosIndex] = {
+        ...existing,
+        quantity: totalQty,
+        avgPrice: newAvg,
+        marginAllocated: combinedMargin,
+        buyCharges: combinedBuyCharges,
+        stopLoss: order.stopLoss || existing.stopLoss,
+        targetPrice: order.targetPrice || existing.targetPrice
+      };
     } else {
-      if (existingPosIndex >= 0) {
-        const existing = paperPositions[existingPosIndex];
-        const closeQty = Math.min(existing.quantity, order.quantity);
-        const realizedGain = (order.price - existing.avgPrice) * closeQty;
-
-        newCash += existing.avgPrice * closeQty + realizedGain;
-        newUsedMargin -= existing.avgPrice * closeQty;
-
-        if (existing.quantity === closeQty) {
-          updatedPositions = paperPositions.filter((_, idx) => idx !== existingPosIndex);
-        } else {
-          updatedPositions = [...paperPositions];
-          updatedPositions[existingPosIndex] = {
-            ...existing,
-            quantity: existing.quantity - closeQty
-          };
-        }
-      } else {
-        newCash -= orderCost;
-        newUsedMargin += orderCost;
-        const newPos: PaperPosition = {
-          id: "pos-" + Date.now(),
-          stockSymbol: order.stockSymbol,
-          stockName: order.stockName,
-          direction: "SELL",
-          quantity: order.quantity,
-          avgPrice: order.price,
-          currentPrice: order.price,
-          stopLoss: order.stopLoss,
-          targetPrice: order.targetPrice,
-          unrealizedPnL: 0,
-          unrealizedPnLPercent: 0,
-          productType: order.productType,
-          openedAt: new Date().toISOString()
-        };
-        updatedPositions = [newPos, ...paperPositions];
-      }
+      const newPos: PaperPosition = {
+        id: "pos-" + Date.now(),
+        stockSymbol: order.stockSymbol,
+        stockName: order.stockName,
+        direction: order.direction,
+        quantity: order.quantity,
+        avgPrice: order.price,
+        currentPrice: order.price,
+        stopLoss: order.stopLoss,
+        targetPrice: order.targetPrice,
+        unrealizedPnL: 0,
+        unrealizedPnLPercent: 0,
+        productType: order.productType,
+        openedAt: new Date().toISOString(),
+        marginAllocated: requiredMargin,
+        leverage,
+        buyCharges: charges.totalCharges,
+        netPnL: -charges.totalCharges
+      };
+      updatedPositions = [newPos, ...paperPositions];
     }
 
     setPaperPositions(updatedPositions);
@@ -358,8 +358,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const newPortfolio: PaperPortfolio = {
       ...paperPortfolio,
-      cashBalance: Math.round(newCash * 100) / 100,
-      usedMargin: Math.round(newUsedMargin * 100) / 100,
+      cashBalance: newCash,
+      usedMargin: newUsedMargin,
+      totalChargesPaid: newTotalCharges,
+      totalTradesCount: newTradesCount,
       totalPortfolioValue: Math.round((newCash + newUsedMargin) * 100) / 100
     };
     setPaperPortfolio(newPortfolio);
@@ -372,14 +374,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const liveQuote = quotes.find(q => q.symbol.toUpperCase() === pos.stockSymbol.toUpperCase());
     const finalPrice = exitPrice || (liveQuote ? liveQuote.price : pos.currentPrice);
+    const isIntraday = pos.productType === "INTRADAY (MIS)";
+    const exitDirection: TradeDirection = pos.direction === "BUY" ? "SELL" : "BUY";
+
+    // Calculate exit regulatory & brokerage charges
+    const sellCharges = TradingCalculationService.calculateOrderCharges(
+      finalPrice,
+      pos.quantity,
+      exitDirection,
+      isIntraday
+    );
 
     const priceDiff = pos.direction === "BUY" ? (finalPrice - pos.avgPrice) : (pos.avgPrice - finalPrice);
-    const realizedPnL = Math.round(priceDiff * pos.quantity * 100) / 100;
-    const returnCash = pos.avgPrice * pos.quantity + realizedPnL;
+    const grossPnL = Math.round(priceDiff * pos.quantity * 100) / 100;
+    const totalTradeCharges = Math.round((pos.buyCharges + sellCharges.totalCharges) * 100) / 100;
+    const netPnL = Math.round((grossPnL - totalTradeCharges) * 100) / 100;
 
-    const newCash = paperPortfolio.cashBalance + returnCash;
-    const newUsedMargin = Math.max(0, paperPortfolio.usedMargin - (pos.avgPrice * pos.quantity));
-    const newRealizedPnL = paperPortfolio.realizedPnL + realizedPnL;
+    // Return the margin allocated + gross profit/loss minus exit taxes
+    const returnCash = Math.round((pos.marginAllocated + grossPnL - sellCharges.totalCharges) * 100) / 100;
+    const newCash = Math.round((paperPortfolio.cashBalance + returnCash) * 100) / 100;
+    const newUsedMargin = Math.max(0, Math.round((paperPortfolio.usedMargin - pos.marginAllocated) * 100) / 100);
+    const newRealizedPnL = Math.round((paperPortfolio.realizedPnL + netPnL) * 100) / 100;
+    const newTotalCharges = Math.round(((paperPortfolio.totalChargesPaid || 0) + sellCharges.totalCharges) * 100) / 100;
 
     const updatedPositions = paperPositions.filter(p => p.id !== positionId);
     setPaperPositions(updatedPositions);
@@ -387,30 +403,83 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const newPortfolio: PaperPortfolio = {
       ...paperPortfolio,
-      cashBalance: Math.round(newCash * 100) / 100,
-      usedMargin: Math.round(newUsedMargin * 100) / 100,
-      realizedPnL: Math.round(newRealizedPnL * 100) / 100,
+      cashBalance: newCash,
+      usedMargin: newUsedMargin,
+      realizedPnL: newRealizedPnL,
+      totalChargesPaid: newTotalCharges,
       totalPortfolioValue: Math.round((newCash + newUsedMargin) * 100) / 100
     };
     setPaperPortfolio(newPortfolio);
     await StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio });
 
+    const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
     const closeOrder: PaperOrder = {
       id: "ord-" + Date.now(),
       stockSymbol: pos.stockSymbol,
       stockName: pos.stockName,
-      direction: pos.direction === "BUY" ? "SELL" : "BUY",
+      direction: exitDirection,
       orderType: "MARKET",
       productType: pos.productType,
       quantity: pos.quantity,
       price: finalPrice,
       executedPrice: finalPrice,
       status: "EXECUTED",
-      timestamp: new Date().toLocaleString("en-IN")
+      timestamp: new Date().toLocaleString("en-IN"),
+      marginRequired: 0,
+      turnover: Math.round(finalPrice * pos.quantity * 100) / 100,
+      charges: sellCharges,
+      contractNoteId
     };
     const newOrders = [closeOrder, ...paperOrders];
     setPaperOrders(newOrders);
     await StorageService.save("paperOrders", closeOrder);
+  };
+
+  const squareOffAllPositions = async () => {
+    if (paperPositions.length === 0) return;
+    for (const pos of [...paperPositions]) {
+      await closePaperPosition(pos.id);
+    }
+  };
+
+  const addVirtualFunds = async (amount: number) => {
+    if (amount <= 0) return;
+    const newCash = Math.round((paperPortfolio.cashBalance + amount) * 100) / 100;
+    const newInitial = Math.round((paperPortfolio.initialCapital + amount) * 100) / 100;
+    const newTotal = Math.round((paperPortfolio.totalPortfolioValue + amount) * 100) / 100;
+
+    const newPortfolio: PaperPortfolio = {
+      ...paperPortfolio,
+      initialCapital: newInitial,
+      cashBalance: newCash,
+      totalPortfolioValue: newTotal
+    };
+    setPaperPortfolio(newPortfolio);
+    await StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio });
+  };
+
+  const cancelPaperOrder = async (orderId: string) => {
+    const order = paperOrders.find(o => o.id === orderId);
+    if (!order || order.status !== "PENDING") return;
+
+    const updated = paperOrders.map(o => o.id === orderId ? { ...o, status: "CANCELLED" as const } : o);
+    setPaperOrders(updated);
+    await StorageService.saveAll("paperOrders", updated);
+  };
+
+  const modifyPaperPositionSLTarget = async (positionId: string, stopLoss?: number, targetPrice?: number) => {
+    const updated = paperPositions.map(pos => {
+      if (pos.id === positionId) {
+        return {
+          ...pos,
+          stopLoss,
+          targetPrice
+        };
+      }
+      return pos;
+    });
+    setPaperPositions(updated);
+    await StorageService.saveAll("paperPositions", updated);
   };
 
   const resetPaperTrading = async () => {
@@ -508,6 +577,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         placePaperOrder,
         closePaperPosition,
         resetPaperTrading,
+        addVirtualFunds,
+        squareOffAllPositions,
+        cancelPaperOrder,
+        modifyPaperPositionSLTarget,
+        selectedContractNoteOrder,
+        setSelectedContractNoteOrder,
+        isContractNoteModalOpen,
+        setIsContractNoteModalOpen,
 
         academyLessons,
         completeAcademyLesson,

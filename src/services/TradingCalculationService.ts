@@ -159,6 +159,77 @@ export class TradingCalculationService {
   }
 
   /**
+   * Calculates realistic Indian regulatory & brokerage charges for a SINGLE LEG order (Buy or Sell).
+   * Used for live order placement estimation and contract note generation (Zerodha / Angel One style).
+   */
+  static calculateOrderCharges(
+    price: number,
+    quantity: number,
+    direction: 'BUY' | 'SELL',
+    isIntraday: boolean = true,
+    brokeragePerOrder: number = 20
+  ): {
+    brokerage: number;
+    stt: number;
+    exchangeCharges: number;
+    gst: number;
+    sebiCharges: number;
+    stampDuty: number;
+    totalCharges: number;
+    breakevenPoints: number;
+  } {
+    if (quantity <= 0 || price <= 0) {
+      return { brokerage: 0, stt: 0, exchangeCharges: 0, gst: 0, sebiCharges: 0, stampDuty: 0, totalCharges: 0, breakevenPoints: 0 };
+    }
+
+    const turnover = price * quantity;
+
+    // Brokerage: Min of 0.03% or ₹20 per executed leg for discount brokers (Zerodha / Angel One)
+    const brokerage = Math.min(brokeragePerOrder, Math.round(turnover * 0.0003 * 100) / 100);
+
+    // STT (Securities Transaction Tax)
+    // Intraday: 0.025% on Sell side only. Delivery (CNC): 0.1% on both Buy and Sell sides.
+    let stt = 0;
+    if (isIntraday) {
+      stt = direction === 'SELL' ? Math.round(turnover * 0.00025 * 100) / 100 : 0;
+    } else {
+      stt = Math.round(turnover * 0.001 * 100) / 100;
+    }
+
+    // Exchange Turnover Fee (NSE rate ~ 0.00297%)
+    const exchangeCharges = Math.round(turnover * 0.0000297 * 100) / 100;
+
+    // SEBI Turnover Fee (₹10 per crore = 0.0001%)
+    const sebiCharges = Math.max(0.01, Math.round(turnover * 0.000001 * 100) / 100);
+
+    // Stamp Duty: On BUY side only (0.003% for Intraday, 0.015% for Delivery)
+    let stampDuty = 0;
+    if (direction === 'BUY') {
+      stampDuty = isIntraday
+        ? Math.round(turnover * 0.00003 * 100) / 100
+        : Math.round(turnover * 0.00015 * 100) / 100;
+    }
+
+    // GST: 18% on (Brokerage + Exchange Charges + SEBI Charges)
+    const gstTaxable = brokerage + exchangeCharges + sebiCharges;
+    const gst = Math.round(gstTaxable * 0.18 * 100) / 100;
+
+    const totalCharges = Math.round((stt + brokerage + exchangeCharges + gst + sebiCharges + stampDuty) * 100) / 100;
+    const breakevenPoints = quantity > 0 ? Math.round((totalCharges / quantity) * 100) / 100 : 0;
+
+    return {
+      brokerage,
+      stt,
+      exchangeCharges,
+      gst,
+      sebiCharges,
+      stampDuty,
+      totalCharges,
+      breakevenPoints
+    };
+  }
+
+  /**
    * Calculates gross P&L, net P&L, and R-multiple for a trade.
    */
   static calculateTradePnL(

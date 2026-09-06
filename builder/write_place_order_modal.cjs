@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+﻿const fs = require('fs');
+const path = require('path');
+const srcDir = path.resolve(__dirname, '..', 'src');
+
+const code = `import React, { useState, useEffect, useMemo } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { Badge } from "../common/Badge";
@@ -111,7 +115,7 @@ export const PlaceOrderModal: React.FC = () => {
 
     if (!hasSufficientMargin) {
       setErrorMessage(
-        `Insufficient available margin. Required: ₹${Math.round(totalDeduction).toLocaleString("en-IN")}, Available: ₹${Math.round(paperPortfolio.cashBalance).toLocaleString("en-IN")}`
+        \`Insufficient available margin. Required: ₹\${Math.round(totalDeduction).toLocaleString("en-IN")}, Available: ₹\${Math.round(paperPortfolio.cashBalance).toLocaleString("en-IN")}\`
       );
       return;
     }
@@ -159,12 +163,12 @@ export const PlaceOrderModal: React.FC = () => {
       title={
         <div className="flex items-center justify-between w-full pr-4">
           <div className="flex items-center gap-2.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${themeBg} animate-pulse`} />
+            <span className={\`w-2.5 h-2.5 rounded-full \${themeBg} animate-pulse\`} />
             <span className="font-extrabold text-base text-text-primary tracking-tight">
               {symbol}
             </span>
             <Badge variant="neutral" size="sm">NSE</Badge>
-            <span className={`text-xs font-bold font-mono ${quote && quote.change >= 0 ? "text-brand-positive" : "text-brand-negative"}`}>
+            <span className={\`text-xs font-bold font-mono \${quote && quote.change >= 0 ? "text-brand-positive" : "text-brand-negative"}\`}>
               ₹{currentPrice.toFixed(2)} ({quote && quote.change >= 0 ? "+" : ""}{quote ? quote.changePercent : 0}%)
             </span>
           </div>
@@ -213,11 +217,11 @@ export const PlaceOrderModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setDirection("BUY")}
-            className={`py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            className={\`py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 \${
               isBuy
                 ? "bg-[#1E60D5] text-white shadow-md shadow-blue-500/20"
                 : "text-text-muted hover:text-text-primary"
-            }`}
+            }\`}
           >
             <TrendingUp className="w-4 h-4" />
             BUY (Long)
@@ -225,11 +229,11 @@ export const PlaceOrderModal: React.FC = () => {
           <button
             type="button"
             onClick={() => setDirection("SELL")}
-            className={`py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            className={\`py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 \${
               !isBuy
                 ? "bg-[#EF4444] text-white shadow-md shadow-red-500/20"
                 : "text-text-muted hover:text-text-primary"
-            }`}
+            }\`}
           >
             <TrendingDown className="w-4 h-4" />
             SELL (Short)
@@ -246,11 +250,11 @@ export const PlaceOrderModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setProductType("INTRADAY (MIS)")}
-              className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
+              className={\`p-3 rounded-xl border text-left transition-all relative overflow-hidden \${
                 productType === "INTRADAY (MIS)"
                   ? "bg-bg-elevated border-brand-accent shadow-sm"
                   : "bg-bg-secondary border-border-subtle text-text-muted hover:border-border-subtle/80"
-              }`}
+              }\`}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-xs text-text-primary">Intraday MIS</span>
@@ -266,11 +270,11 @@ export const PlaceOrderModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setProductType("DELIVERY (CNC)")}
-              className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
+              className={\`p-3 rounded-xl border text-left transition-all relative overflow-hidden \${
                 productType === "DELIVERY (CNC)"
                   ? "bg-bg-elevated border-brand-accent shadow-sm"
                   : "bg-bg-secondary border-border-subtle text-text-muted hover:border-border-subtle/80"
-              }`}
+              }\`}
             >
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold text-xs text-text-primary">Longterm CNC</span>
@@ -294,11 +298,11 @@ export const PlaceOrderModal: React.FC = () => {
                 key={type}
                 type="button"
                 onClick={() => setOrderType(type)}
-                className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={\`py-1.5 rounded-lg text-xs font-bold transition-all \${
                   orderType === type
                     ? "bg-bg-elevated text-text-primary shadow-xs border border-border-subtle font-extrabold text-brand-accent"
                     : "text-text-muted hover:text-text-primary"
-                }`}
+                }\`}
               >
                 {type}
               </button>
@@ -351,11 +355,11 @@ export const PlaceOrderModal: React.FC = () => {
               disabled={orderType === "MARKET" || orderType === "SL-M"}
               value={orderType === "MARKET" || orderType === "SL-M" ? currentPrice.toFixed(2) : limitPrice}
               onChange={e => setLimitPrice(e.target.value)}
-              className={`w-full border rounded-xl px-3 py-2 text-sm font-mono font-bold text-text-primary focus:outline-none focus:ring-1 focus:ring-brand-accent ${
+              className={\`w-full border rounded-xl px-3 py-2 text-sm font-mono font-bold text-text-primary focus:outline-none focus:ring-1 focus:ring-brand-accent \${
                 orderType === "MARKET" || orderType === "SL-M"
                   ? "bg-bg-elevated/50 text-text-muted border-border-subtle cursor-not-allowed"
                   : "bg-bg-secondary border-border-subtle"
-              }`}
+              }\`}
             />
             <span className="text-[10px] text-text-muted mt-1 block">
               Tick size: ₹0.05 • LTP: ₹{currentPrice.toFixed(2)}
@@ -510,15 +514,19 @@ export const PlaceOrderModal: React.FC = () => {
             type="submit"
             size="md"
             disabled={!hasSufficientMargin || isSubmitting}
-            className={`flex-[2] font-bold text-white shadow-lg transition-all active:scale-95 ${
+            className={\`flex-[2] font-bold text-white shadow-lg transition-all active:scale-95 \${
               isBuy ? "bg-[#1E60D5] hover:bg-[#1A54BD]" : "bg-[#EF4444] hover:bg-[#DC2626]"
-            }`}
+            }\`}
             icon={isBuy ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
           >
-            {isSubmitting ? "Executing..." : `${direction} ${symbol} (${quantity} Qty)`}
+            {isSubmitting ? "Executing..." : \`\${direction} \${symbol} (\${quantity} Qty)\`}
           </Button>
         </div>
       </form>
     </Modal>
   );
 };
+`;
+
+fs.writeFileSync(path.join(srcDir, 'components/modals/PlaceOrderModal.tsx'), code);
+console.log('PlaceOrderModal.tsx updated');

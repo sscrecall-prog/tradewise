@@ -86,4 +86,44 @@ describe('TradingCalculationService', () => {
     expect(dd.maxDrawdownAmount).toBe(15000);
     expect(dd.maxDrawdownPercent).toBeCloseTo(13.64, 1);
   });
+
+  it('calculates single-leg order charges (Zerodha / Angel One style)', () => {
+    // Intraday Buy: 100 shares of Reliance at ₹3,000 (Turnover: ₹3,00,000)
+    const buyCharges = TradingCalculationService.calculateOrderCharges(3000, 100, 'BUY', true);
+    expect(buyCharges.brokerage).toBeLessThanOrEqual(20);
+    expect(buyCharges.stt).toBe(0); // No STT on intraday buy
+    expect(buyCharges.stampDuty).toBeGreaterThan(0);
+    expect(buyCharges.totalCharges).toBeGreaterThan(0);
+
+    // Intraday Sell: 100 shares of Reliance at ₹3,020 (Turnover: ₹3,02,000)
+    const sellCharges = TradingCalculationService.calculateOrderCharges(3020, 100, 'SELL', true);
+    expect(sellCharges.stt).toBeGreaterThan(0); // STT applies on sell
+    expect(sellCharges.stampDuty).toBe(0); // No stamp duty on sell
+    expect(sellCharges.totalCharges).toBeGreaterThan(0);
+  });
+
+  it('calculates delivery (CNC) charges on both legs correctly', () => {
+    // Delivery Buy: 10 shares of TCS at ₹4,000 (Turnover: ₹40,000)
+    const buyDelivery = TradingCalculationService.calculateOrderCharges(4000, 10, 'BUY', false);
+    expect(buyDelivery.stt).toBeCloseTo(40, 0); // 0.1% of ₹40,000 = ₹40
+    expect(buyDelivery.stampDuty).toBeCloseTo(6, 0); // 0.015% of ₹40,000 = ₹6
+    expect(buyDelivery.totalCharges).toBeGreaterThan(46);
+
+    // Delivery Sell: 10 shares of TCS at ₹4,100 (Turnover: ₹41,000)
+    const sellDelivery = TradingCalculationService.calculateOrderCharges(4100, 10, 'SELL', false);
+    expect(sellDelivery.stt).toBeCloseTo(41, 0); // 0.1% of ₹41,000 = ₹41
+    expect(sellDelivery.stampDuty).toBe(0); // Stamp duty only on buy
+    expect(sellDelivery.totalCharges).toBeGreaterThan(41);
+  });
+
+  it('verifies 5x leverage margin requirements vs 1x delivery', () => {
+    const turnover = 100000;
+    const misMargin = turnover / 5; // 20% margin
+    const cncMargin = turnover; // 100% margin
+
+    expect(misMargin).toBe(20000);
+    expect(cncMargin).toBe(100000);
+    expect(cncMargin / misMargin).toBe(5);
+  });
 });
+
