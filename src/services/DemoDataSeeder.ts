@@ -1116,6 +1116,11 @@ export class DemoDataSeeder {
   }
 
   static async seedInitialData(): Promise<void> {
+    const isInitialized = typeof window !== 'undefined' ? localStorage.getItem('tw_app_initialized') : null;
+    if (isInitialized === 'true') {
+      return;
+    }
+
     const existingWatchlist = await StorageService.getAll('watchlist');
     if (existingWatchlist.length === 0) {
       const watchlistItems = this.getInitialWatchlist().map(symbol => ({ id: symbol, symbol, addedAt: new Date().toISOString() }));
@@ -1161,6 +1166,53 @@ export class DemoDataSeeder {
     if (existingAcademy.length === 0) {
       await StorageService.saveAll('academy', this.getInitialAcademyLessons());
     }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tw_app_initialized', 'true');
+    }
+  }
+
+  static async startFreshBlankCanvas(options?: { startingCapital?: number; traderName?: string }): Promise<void> {
+    const storesToClear = [
+      'journal',
+      'tradePlans',
+      'paperOrders',
+      'paperPositions'
+    ];
+    for (const store of storesToClear) {
+      await StorageService.clearStore(store);
+    }
+
+    const startingCapital = options?.startingCapital || 100000;
+
+    // Fresh Paper Portfolio with starting balance
+    const freshPortfolio: PaperPortfolio = {
+      initialCapital: startingCapital,
+      cashBalance: startingCapital,
+      usedMargin: 0,
+      realizedPnL: 0,
+      unrealizedPnL: 0,
+      totalPortfolioValue: startingCapital,
+      totalChargesPaid: 0,
+      totalTradesCount: 0
+    };
+    await StorageService.save('paperPortfolio', { id: 'portfolio_main', ...freshPortfolio });
+
+    // Clear price alerts & daily checklist logs from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('tw_price_alerts');
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('tw_checklist_')) {
+            localStorage.removeItem(key);
+          }
+        });
+        localStorage.setItem('tw_app_initialized', 'true');
+        localStorage.setItem('tw_canvas_mode', 'blank');
+      } catch (e) {
+        console.error('Error clearing localStorage for blank canvas:', e);
+      }
+    }
   }
 
   static async resetToDemoData(): Promise<void> {
@@ -1178,6 +1230,10 @@ export class DemoDataSeeder {
     ];
     for (const store of stores) {
       await StorageService.clearStore(store);
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('tw_app_initialized');
+      localStorage.setItem('tw_canvas_mode', 'demo');
     }
     await this.seedInitialData();
   }

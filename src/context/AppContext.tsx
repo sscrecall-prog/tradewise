@@ -83,6 +83,7 @@ interface AppContextType {
   setSelectedStockForOrder: (symbol: string | null) => void;
 
   resetAllDemoData: () => Promise<void>;
+  startFreshBlankCanvas: (options?: { startingCapital?: number; traderName?: string }) => Promise<void>;
   exportDataJSON: () => Promise<string>;
   importDataJSON: (jsonString: string) => Promise<{ success: boolean; message: string }>;
 }
@@ -141,12 +142,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         StorageService.getAll<AppSettings & { id: string }>("settings")
       ]);
 
-      if (watchlistItems.length > 0) setWatchlist(watchlistItems.map(i => i.symbol));
-      if (journalItems.length > 0) setJournal(journalItems);
-      if (planItems.length > 0) setTradePlans(planItems);
+      if (watchlistItems.length > 0) {
+        setWatchlist(watchlistItems.map(i => i.symbol));
+      } else {
+        setWatchlist(DemoDataSeeder.getInitialWatchlist());
+      }
+      setJournal(journalItems);
+      setTradePlans(planItems);
       if (portfolioItems.length > 0) setPaperPortfolio(portfolioItems[0]);
-      if (positionItems.length > 0) setPaperPositions(positionItems);
-      if (orderItems.length > 0) setPaperOrders(orderItems);
+      setPaperPositions(positionItems);
+      setPaperOrders(orderItems);
       if (lessonItems.length > 0) setAcademyLessons(lessonItems);
       if (prefItems.length > 0) setPreferences(prefItems[0]);
       if (profileItems.length > 0) setProfile(profileItems[0]);
@@ -541,6 +546,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await initializeAppState();
   };
 
+  const startFreshBlankCanvas = async (options?: { startingCapital?: number; traderName?: string }) => {
+    await DemoDataSeeder.startFreshBlankCanvas(options);
+    if (options?.traderName) {
+      await updateProfile({ name: options.traderName });
+    }
+    if (options?.startingCapital) {
+      await updatePreferences({ defaultCapital: options.startingCapital });
+    }
+    await initializeAppState();
+  };
+
   const exportDataJSON = async () => {
     return await StorageService.exportAllData();
   };
@@ -620,6 +636,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedStockForOrder,
 
         resetAllDemoData,
+        startFreshBlankCanvas,
         exportDataJSON,
         importDataJSON
       }}
