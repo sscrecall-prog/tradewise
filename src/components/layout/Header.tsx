@@ -13,7 +13,10 @@ import {
   Download,
   User,
   Flame,
-  Radio
+  Radio,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Menu
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useMarketData } from "../../context/MarketDataContext";
@@ -33,7 +36,16 @@ export const Header: React.FC = () => {
     isLoading,
     searchAllIndianStocks
   } = useMarketData();
-  const { activeTab, setActiveTab, setIsNewTradeModalOpen, profile, journal } = useApp();
+  const {
+    activeTab,
+    setActiveTab,
+    setIsNewTradeModalOpen,
+    profile,
+    journal,
+    isSidebarCollapsed,
+    toggleSidebar,
+    toggleMobileSidebar
+  } = useApp();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -131,13 +143,35 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-20 w-full bg-dark-950/90 backdrop-blur-xl border-b border-border-subtle px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-sm">
-      {/* Left: Mobile Brand or Search Bar */}
-      <div className="flex items-center gap-3 flex-1 max-w-xs sm:max-w-sm">
-        <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-brand-accent text-dark-950 flex items-center justify-center font-black shadow-md shadow-lime-400/20">
-            <TrendingUp className="w-4 h-4 stroke-[2.5]" />
-          </div>
-        </div>
+      {/* Left: Mobile Drawer Trigger, Desktop Sidebar Collapse Toggle, and Pill Search Bar */}
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-xs sm:max-w-sm">
+        {/* Mobile Hamburger Drawer Button */}
+        <button
+          onClick={toggleMobileSidebar}
+          className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-dark-900 text-text-secondary hover:text-brand-accent border border-border-subtle flex-shrink-0 transition-colors"
+          title="Open Menu"
+          aria-label="Open menu"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+
+        {/* Desktop Sidebar Toggle Button */}
+        <button
+          onClick={toggleSidebar}
+          className={`hidden md:flex items-center justify-center w-8 h-8 rounded-xl border transition-all flex-shrink-0 ${
+            isSidebarCollapsed
+              ? "bg-brand-accent/15 text-brand-accent border-brand-accent/30 hover:bg-brand-accent/25 shadow-lime-sm"
+              : "bg-dark-900 text-text-secondary hover:text-brand-accent border-border-subtle hover:bg-dark-850"
+          }`}
+          title={isSidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
+          aria-label="Toggle sidebar"
+        >
+          {isSidebarCollapsed ? (
+            <PanelLeftOpen className="w-4 h-4" />
+          ) : (
+            <PanelLeftClose className="w-4 h-4" />
+          )}
+        </button>
 
         {/* Pill Search Input */}
         <div className="relative w-full">

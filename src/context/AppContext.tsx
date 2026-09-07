@@ -82,6 +82,13 @@ interface AppContextType {
   selectedStockForOrder: string | null;
   setSelectedStockForOrder: (symbol: string | null) => void;
 
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleSidebar: () => void;
+  isMobileSidebarOpen: boolean;
+  setIsMobileSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleMobileSidebar: () => void;
+
   resetAllDemoData: () => Promise<void>;
   startFreshBlankCanvas: (options?: { startingCapital?: number; traderName?: string }) => Promise<void>;
   exportDataJSON: () => Promise<string>;
@@ -113,6 +120,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedStockForOrder, setSelectedStockForOrder] = useState<string | null>(null);
   const [selectedContractNoteOrder, setSelectedContractNoteOrder] = useState<PaperOrder | null>(null);
   const [isContractNoteModalOpen, setIsContractNoteModalOpen] = useState(false);
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("tradewise_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem("tradewise_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const toggleMobileSidebar = useCallback(() => {
+    setIsMobileSidebarOpen(prev => !prev);
+  }, []);
+
+  // Professional global keyboard shortcut: Ctrl+B or Cmd+B to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleSidebar]);
 
   const initializeAppState = useCallback(async () => {
     try {
@@ -634,6 +684,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsPlaceOrderModalOpen,
         selectedStockForOrder,
         setSelectedStockForOrder,
+
+        isSidebarCollapsed,
+        setIsSidebarCollapsed,
+        toggleSidebar,
+        isMobileSidebarOpen,
+        setIsMobileSidebarOpen,
+        toggleMobileSidebar,
 
         resetAllDemoData,
         startFreshBlankCanvas,
