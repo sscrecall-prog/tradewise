@@ -12,7 +12,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
-  Lock
+  Lock,
+  Layers,
+  Compass
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useMarketData } from "../../context/MarketDataContext";
@@ -112,6 +114,8 @@ export const Header: React.FC = () => {
 
   const navPills = [
     { id: "dashboard", label: "Dashboard" },
+    { id: "derivatives", label: "F&O Options", icon: <Layers className="w-3.5 h-3.5 text-purple-400" /> },
+    { id: "fii-dii", label: "FII/DII Flow", icon: <Compass className="w-3.5 h-3.5 text-cyan-400" /> },
     { id: "tradepulse", label: "NIFTY 50", icon: <Flame className="w-3.5 h-3.5" /> },
     { id: "markets", label: "Markets" },
     { id: "watchlist", label: "Watchlist" },
@@ -269,8 +273,8 @@ export const Header: React.FC = () => {
           <span>AI Assistant</span>
         </button>
 
-        {/* Prop-Desk Tilt Lock Indicator */}
-        {isTiltLocked && (
+        {/* Prop-Desk Tilt Lock Indicator & Trigger */}
+        {isTiltLocked ? (
           <button
             onClick={() => setIsTiltLockModalOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-400 text-xs font-black transition-all animate-pulse shadow-md shadow-rose-500/10 cursor-pointer"
@@ -280,6 +284,15 @@ export const Header: React.FC = () => {
             <span>
               Tilt Lock ({Math.floor(tiltLockState.remainingSeconds / 60)}m {tiltLockState.remainingSeconds % 60}s)
             </span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setIsTiltLockModalOpen(true)}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-secondary hover:bg-bg-elevated text-text-secondary hover:text-rose-400 border border-border-subtle hover:border-rose-500/30 text-xs font-bold transition-all shadow-sm cursor-pointer"
+            title="Open Prop-Desk Tilt Lock & Cooldown Shield"
+          >
+            <Lock className="w-3.5 h-3.5 text-rose-400" />
+            <span className="hidden xl:inline">Tilt Lock</span>
           </button>
         )}
 

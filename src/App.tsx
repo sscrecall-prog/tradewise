@@ -9,6 +9,7 @@ import { PsychologyPage } from "./pages/PsychologyPage";
 import { MarketsPage } from "./pages/MarketsPage";
 import { TradePulsePage } from "./pages/TradePulsePage";
 import { DerivativesPage } from "./pages/DerivativesPage";
+import { FiiDiiPage } from "./pages/FiiDiiPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { PaperTradingPage } from "./pages/PaperTradingPage";
 import { AcademyPage } from "./pages/AcademyPage";
@@ -34,6 +35,8 @@ export const App: React.FC = () => {
         return <DashboardPage />;
       case "derivatives":
         return <DerivativesPage />;
+      case "fii-dii":
+        return <FiiDiiPage />;
       case "tradepulse":
         return <TradePulsePage />;
       case "markets":
@@ -49,6 +52,7 @@ export const App: React.FC = () => {
       case "psychology":
         return <PsychologyPage />;
       case "analytics":
+      case "time-mae":
         return <AnalyticsPage />;
       case "academy":
         return <AcademyPage />;

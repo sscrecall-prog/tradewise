@@ -79,6 +79,10 @@ interface AppContextType {
   activeTab: string;
   setActiveTab: (tab: string) => void;
 
+  analyticsActiveTab: "OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE";
+  setAnalyticsActiveTab: (tab: "OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE") => void;
+  openAnalyticsTab: (tab: "OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE") => void;
+
   isNewTradeModalOpen: boolean;
   setIsNewTradeModalOpen: (open: boolean) => void;
   isChecklistModalOpen: boolean;
@@ -120,6 +124,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [settings, setSettings] = useState<AppSettings>(DemoDataSeeder.getInitialSettings());
 
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [analyticsActiveTab, setAnalyticsActiveTab] = useState<"OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE">("OVERVIEW");
+
+  const openAnalyticsTab = (tab: "OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE") => {
+    setAnalyticsActiveTab(tab);
+    setActiveTab("analytics");
+  };
 
   const [isNewTradeModalOpen, setIsNewTradeModalOpen] = useState(false);
   const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
@@ -816,6 +826,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         activeTab,
         setActiveTab,
+
+        analyticsActiveTab,
+        setAnalyticsActiveTab,
+        openAnalyticsTab,
 
         isNewTradeModalOpen,
         setIsNewTradeModalOpen,

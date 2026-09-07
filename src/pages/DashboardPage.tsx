@@ -19,7 +19,14 @@ import {
   ShieldAlert,
   ChevronRight,
   BookOpen,
-  Flame
+  Flame,
+  Layers,
+  Clock,
+  Target,
+  Lock,
+  Compass,
+  Sparkles,
+  ShieldCheck
 } from "lucide-react";
 
 export const DashboardPage: React.FC = () => {
@@ -31,7 +38,10 @@ export const DashboardPage: React.FC = () => {
     todayTradesCount,
     preferences,
     setIsNewTradeModalOpen,
-    setActiveTab
+    setActiveTab,
+    openAnalyticsTab,
+    setIsTiltLockModalOpen,
+    isTiltLocked
   } = useApp();
 
   const { indices, openStockModal } = useMarketData();
@@ -253,6 +263,167 @@ export const DashboardPage: React.FC = () => {
               <span className="text-sm font-black text-text-primary mt-0.5">
                 +₹{analytics.expectancy} / trade
               </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ⚡ Institutional Pro Trading Suite (5 Elite Edge Modules) */}
+      <div className="p-6 rounded-3xl bg-bg-card border border-border-subtle shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-accent/20 border border-brand-accent/40 flex items-center justify-center text-brand-positive">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-extrabold text-text-primary tracking-tight">
+                  Institutional Pro Trading Suite
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-accent/20 text-brand-positive border border-brand-accent/30 uppercase">
+                  5 Elite Modules Live
+                </span>
+              </div>
+              <p className="text-xs text-text-muted mt-0.5">
+                Prop-firm grade execution, quantitative derivatives data, and behavioral risk algorithms
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+          {/* Module 1: F&O Option Chain & Live OI */}
+          <div
+            onClick={() => setActiveTab("derivatives")}
+            className="p-4 rounded-2xl bg-bg-secondary hover:bg-bg-elevated border border-border-subtle hover:border-purple-500/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between group shadow-sm"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 uppercase">
+                  Live OI & PCR
+                </span>
+              </div>
+              <h4 className="text-xs font-black text-text-primary mt-3 group-hover:text-purple-400 transition-colors">
+                1. F&O Option Chain
+              </h4>
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                Live Put-Call Ratio (PCR), Expiry Max Pain curve, strike build-up & India VIX risk sizing.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[11px] font-bold text-purple-400">
+              <span>Open Option Chain</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </div>
+
+          {/* Module 2: Time-of-Day Edge Matrix */}
+          <div
+            onClick={() => openAnalyticsTab("TIME_OF_DAY")}
+            className="p-4 rounded-2xl bg-bg-secondary hover:bg-bg-elevated border border-border-subtle hover:border-brand-accent/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between group shadow-sm"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-brand-accent/15 text-brand-positive flex items-center justify-center">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-positive uppercase">
+                  Timing Edge
+                </span>
+              </div>
+              <h4 className="text-xs font-black text-text-primary mt-3 group-hover:text-brand-positive transition-colors">
+                2. Time-of-Day Matrix
+              </h4>
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                Discover your Golden Hour. Avoid mid-day chop for a 35%+ increase in mathematical win expectancy.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[11px] font-bold text-brand-positive">
+              <span>Analyze Session</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </div>
+
+          {/* Module 3: MAE / MFE Excursion Engine */}
+          <div
+            onClick={() => openAnalyticsTab("MFE_MAE")}
+            className="p-4 rounded-2xl bg-bg-secondary hover:bg-bg-elevated border border-border-subtle hover:border-emerald-500/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between group shadow-sm"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                  <Target className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 uppercase">
+                  Trade Audit
+                </span>
+              </div>
+              <h4 className="text-xs font-black text-text-primary mt-3 group-hover:text-emerald-400 transition-colors">
+                3. MAE / MFE Engine
+              </h4>
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                Audit leaving money on the table. Detect premature exits and optimize stop-loss placement.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[11px] font-bold text-emerald-400">
+              <span>Audit Excursions</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </div>
+
+          {/* Module 4: Prop-Desk Tilt Lock */}
+          <div
+            onClick={() => setIsTiltLockModalOpen(true)}
+            className="p-4 rounded-2xl bg-bg-secondary hover:bg-bg-elevated border border-border-subtle hover:border-rose-500/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between group shadow-sm"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 uppercase">
+                  {isTiltLocked ? "Locked 🛑" : "Discipline"}
+                </span>
+              </div>
+              <h4 className="text-xs font-black text-text-primary mt-3 group-hover:text-rose-400 transition-colors">
+                4. Tilt Lock & Cost
+              </h4>
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                Enforce daily loss lockout, pledge discipline, and audit ₹ capital wasted on rule breaks.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[11px] font-bold text-rose-400">
+              <span>{isTiltLocked ? "View Tilt Timer" : "Discipline Shield"}</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </div>
+
+          {/* Module 5: FII / DII Flow & Sector Rotation */}
+          <div
+            onClick={() => setActiveTab("fii-dii")}
+            className="p-4 rounded-2xl bg-bg-secondary hover:bg-bg-elevated border border-border-subtle hover:border-cyan-500/50 cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between group shadow-sm"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
+                  <Compass className="w-4 h-4" />
+                </div>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 uppercase">
+                  Smart Money
+                </span>
+              </div>
+              <h4 className="text-xs font-black text-text-primary mt-3 group-hover:text-cyan-400 transition-colors">
+                5. FII / DII & Sectors
+              </h4>
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                Institutional Cash Net buy/sell ₹ Cr, Index Futures Long ratio, and Sector Rotation heatmap.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-border-subtle/50 flex items-center justify-between text-[11px] font-bold text-cyan-400">
+              <span>Track Smart Money</span>
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
         </div>

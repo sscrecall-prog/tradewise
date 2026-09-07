@@ -431,3 +431,46 @@ export interface OptionChainData {
   lastUpdated: string;
 }
 
+export interface FiiDiiCashFlow {
+  date: string;
+  fiiGrossBuy: number; // ₹ Crores
+  fiiGrossSell: number;
+  fiiNet: number;
+  diiGrossBuy: number;
+  diiGrossSell: number;
+  diiNet: number;
+  combinedNet: number;
+}
+
+export interface FiiDerivativePosition {
+  indexFuturesLongContracts: number;
+  indexFuturesShortContracts: number;
+  indexFuturesLongRatio: number; // percentage (e.g. 24.8%)
+  sentiment: 'OVERSOLD_SQUEEZE' | 'BEARISH' | 'NEUTRAL' | 'BULLISH' | 'OVERBOUGHT_UNWIND';
+  sentimentLabel: string;
+  description: string;
+  historicalTrend: { date: string; longRatio: number }[];
+}
+
+export interface SectorPerformance {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  momentumRank: 'LEADING' | 'IMPROVING' | 'WEAKENING' | 'LAGGING';
+  advances: number;
+  declines: number;
+  topContender: string;
+  inflowStatus: 'HEAVY_INFLOW' | 'INFLOW' | 'NEUTRAL' | 'OUTFLOW' | 'HEAVY_OUTFLOW';
+}
+
+export interface FiiDiiReport {
+  cash: FiiDiiCashFlow;
+  derivatives: FiiDerivativePosition;
+  sectors: SectorPerformance[];
+  historicalCash: FiiDiiCashFlow[];
+  marketSummary: string;
+  lastUpdated: string;
+}
+

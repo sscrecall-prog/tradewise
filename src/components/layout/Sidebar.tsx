@@ -17,7 +17,12 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Layers
+  Layers,
+  Compass,
+  Target,
+  Lock,
+  Clock,
+  Sparkles
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -32,7 +37,11 @@ export const Sidebar: React.FC = () => {
     isSidebarCollapsed,
     toggleSidebar,
     isMobileSidebarOpen,
-    toggleMobileSidebar
+    toggleMobileSidebar,
+    openAnalyticsTab,
+    setIsTiltLockModalOpen,
+    isTiltLocked,
+    analyticsActiveTab
   } = useApp();
 
   const unreadLessons = academyLessons.filter(l => !l.isCompleted).length;
@@ -45,6 +54,24 @@ export const Sidebar: React.FC = () => {
       label: "F&O Option Chain",
       icon: <Layers className="w-4 h-4 text-purple-400" />,
       badge: "Live OI"
+    },
+    {
+      id: "time-mae",
+      label: "Time & MAE/MFE Edge",
+      icon: <Target className="w-4 h-4 text-brand-positive" />,
+      badge: "Edge"
+    },
+    {
+      id: "fii-dii",
+      label: "FII / DII Flow Radar",
+      icon: <Compass className="w-4 h-4 text-cyan-400" />,
+      badge: "Smart Money"
+    },
+    {
+      id: "tilt-lock",
+      label: "Tilt Lock Shield",
+      icon: <Lock className={`w-4 h-4 ${isTiltLocked ? "text-rose-500 animate-pulse" : "text-rose-400"}`} />,
+      badge: isTiltLocked ? "LOCKED 🛑" : "Discipline"
     },
     {
       id: "tradepulse",
@@ -81,8 +108,27 @@ export const Sidebar: React.FC = () => {
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> }
   ];
 
+  const isItemActive = (id: string) => {
+    if (id === "time-mae") {
+      return activeTab === "analytics" && (analyticsActiveTab === "TIME_OF_DAY" || analyticsActiveTab === "MFE_MAE");
+    }
+    if (id === "analytics") {
+      return activeTab === "analytics" && (analyticsActiveTab === "OVERVIEW" || analyticsActiveTab === "COST_INDISCIPLINE");
+    }
+    if (id === "tilt-lock") {
+      return false;
+    }
+    return activeTab === id;
+  };
+
   const handleNavClick = (id: string) => {
-    setActiveTab(id);
+    if (id === "time-mae") {
+      openAnalyticsTab("TIME_OF_DAY");
+    } else if (id === "tilt-lock") {
+      setIsTiltLockModalOpen(true);
+    } else {
+      setActiveTab(id);
+    }
     if (isMobileSidebarOpen) {
       toggleMobileSidebar();
     }
@@ -136,7 +182,7 @@ export const Sidebar: React.FC = () => {
             Core Modules
           </div>
           {mainNavItems.map(item => {
-            const isActive = activeTab === item.id;
+            const isActive = isItemActive(item.id);
             return (
               <button
                 key={item.id}
@@ -286,11 +332,11 @@ export const Sidebar: React.FC = () => {
           )}
 
           {mainNavItems.map(item => {
-            const isActive = activeTab === item.id;
+            const isActive = isItemActive(item.id);
             return (
               <div key={item.id} className="relative group">
                 <button
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`w-full flex items-center rounded-2xl text-xs font-semibold transition-all duration-150 ${
                     isSidebarCollapsed
                       ? "h-11 justify-center px-0"
