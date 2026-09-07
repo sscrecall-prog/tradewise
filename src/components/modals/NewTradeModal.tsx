@@ -48,7 +48,8 @@ export const NewTradeModal: React.FC = () => {
     addJournalEntry,
     preferences,
     isTiltLocked,
-    setIsTiltLockModalOpen
+    setIsTiltLockModalOpen,
+    setActiveTab
   } = useApp();
   const { quotes } = useMarketData();
 
@@ -419,6 +420,24 @@ export const NewTradeModal: React.FC = () => {
                       PUT (PE)
                     </button>
                   </div>
+                </div>
+
+                {/* India VIX Live Advisory Strip */}
+                <div className="sm:col-span-2 p-2.5 rounded-xl bg-bg-secondary/70 border border-border-subtle flex items-center justify-between text-[11px]">
+                  <div className="flex items-center gap-1.5 text-text-secondary">
+                    <span className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
+                    <span><b>India VIX (13.4):</b> Balanced Volatility. Standard 1R lot sizing recommended.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNewTradeModalOpen(false);
+                      setActiveTab("derivatives");
+                    }}
+                    className="text-brand-accent hover:underline font-bold text-[10px] cursor-pointer"
+                  >
+                    View Live Option Chain &rarr;
+                  </button>
                 </div>
               </>
             )}

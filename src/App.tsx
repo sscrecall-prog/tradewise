@@ -8,6 +8,7 @@ import { PlannerPage } from "./pages/PlannerPage";
 import { PsychologyPage } from "./pages/PsychologyPage";
 import { MarketsPage } from "./pages/MarketsPage";
 import { TradePulsePage } from "./pages/TradePulsePage";
+import { DerivativesPage } from "./pages/DerivativesPage";
 import { WatchlistPage } from "./pages/WatchlistPage";
 import { PaperTradingPage } from "./pages/PaperTradingPage";
 import { AcademyPage } from "./pages/AcademyPage";
@@ -31,6 +32,8 @@ export const App: React.FC = () => {
     switch (activeTab) {
       case "dashboard":
         return <DashboardPage />;
+      case "derivatives":
+        return <DerivativesPage />;
       case "tradepulse":
         return <TradePulsePage />;
       case "markets":

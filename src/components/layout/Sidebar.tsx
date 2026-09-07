@@ -16,7 +16,8 @@ import {
   PanelLeftOpen,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Layers
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -39,6 +40,12 @@ export const Sidebar: React.FC = () => {
 
   const mainNavItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    {
+      id: "derivatives",
+      label: "F&O Option Chain",
+      icon: <Layers className="w-4 h-4 text-purple-400" />,
+      badge: "Live OI"
+    },
     {
       id: "tradepulse",
       label: "NIFTY 50 Analyzer",

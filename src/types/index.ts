@@ -370,3 +370,64 @@ export interface TiltLockState {
   emergencyOverridesCount: number;
 }
 
+// --- F&O DERIVATIVES EDGE TYPES ---
+
+export type OptionBuildUpType = 'LONG_BUILDUP' | 'SHORT_BUILDUP' | 'SHORT_COVERING' | 'LONG_UNWINDING';
+
+export interface OptionLegData {
+  oi: number;              // In contracts
+  changeOi: number;        // Absolute net change in contracts
+  changeOiPercent: number; // % change in contracts
+  volume: number;          // Traded volume
+  ltp: number;             // Last Traded Price
+  change: number;          // Price change
+  changePercent: number;   // Price % change
+  iv: number;              // Implied Volatility %
+  buildUp: OptionBuildUpType;
+}
+
+export interface OptionStrikeRow {
+  strikePrice: number;
+  call: OptionLegData;
+  put: OptionLegData;
+  isAtm: boolean;
+  distanceFromAtm: number;
+}
+
+export interface VixRiskGuidance {
+  regime: 'LOW_VOLATILITY' | 'NORMAL' | 'HIGH_VOLATILITY' | 'EXTREME_VOLATILITY';
+  vixValue: number;
+  title: string;
+  description: string;
+  stopLossMultiplier: number; // 1.0 (normal) to 1.5 (high)
+  positionSizeFactor: number;  // 1.0 (normal) or 0.5 (cut size 50%)
+  recommendation: string;
+}
+
+export interface OptionChainData {
+  underlying: 'NIFTY' | 'BANKNIFTY' | 'FINNIFTY' | 'SENSEX';
+  underlyingName: string;
+  spotPrice: number;
+  spotChange: number;
+  spotChangePercent: number;
+  futuresPrice: number;
+  futuresBasis: number; // futuresPrice - spotPrice
+  expiryDate: string;
+  availableExpiries: string[];
+  totalCallOi: number;
+  totalPutOi: number;
+  totalCallVolume: number;
+  totalPutVolume: number;
+  pcr: number; // Put-Call Ratio
+  pcrSentiment: 'EXTREME_BEARISH' | 'BEARISH' | 'NEUTRAL' | 'BULLISH' | 'EXTREME_BULLISH';
+  pcrDescription: string;
+  maxPainStrike: number;
+  highestCallOiStrike: number; // Resistance wall
+  highestPutOiStrike: number;  // Support floor
+  indiaVix: number;
+  vixRisk: VixRiskGuidance;
+  strikes: OptionStrikeRow[];
+  maxPainCurve: { strike: number; totalLossRupees: number }[];
+  lastUpdated: string;
+}
+
