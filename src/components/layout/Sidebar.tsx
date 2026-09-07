@@ -88,18 +88,20 @@ export const Sidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ${
                 isActive
-                  ? "bg-bg-elevated text-text-primary border border-border-subtle shadow-sm font-semibold text-brand-accent"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card/70"
+                  ? "bg-brand-accent text-dark-950 font-black shadow-md shadow-lime-400/20 scale-[1.01]"
+                  : "text-zinc-400 hover:text-text-primary hover:bg-white/5"
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={isActive ? "text-brand-accent" : "text-text-muted"}>{item.icon}</span>
+                <span className={isActive ? "text-dark-950" : "text-zinc-400"}>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className="px-2 py-0.5 text-[10px] rounded-full bg-brand-accent/15 text-brand-accent font-semibold">
+                <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${
+                  isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-accent"
+                }`}>
                   {item.badge}
                 </span>
               )}
@@ -116,14 +118,14 @@ export const Sidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ${
                 isActive
-                  ? "bg-bg-elevated text-text-primary border border-border-subtle shadow-sm font-semibold text-brand-accent"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-card/70"
+                  ? "bg-brand-accent text-dark-950 font-black shadow-md shadow-lime-400/20 scale-[1.01]"
+                  : "text-zinc-400 hover:text-text-primary hover:bg-white/5"
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={isActive ? "text-brand-accent" : "text-text-muted"}>{item.icon}</span>
+                <span className={isActive ? "text-dark-950" : "text-zinc-400"}>{item.icon}</span>
                 <span>{item.label}</span>
               </div>
             </button>
@@ -132,14 +134,14 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom Mini Discipline Card */}
-      <div className="p-4 border-t border-border-subtle/80 bg-bg-card/50 m-3 rounded-2xl border">
+      <div className="p-4 border border-border-subtle/80 bg-bg-card/70 m-3 rounded-2xl shadow-inner">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
-          <span className="text-xs font-bold text-brand-positive">{discipline.overallScore}/100</span>
+          <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
         </div>
-        <div className="w-full bg-bg-secondary h-1.5 rounded-full overflow-hidden mb-2">
+        <div className="w-full bg-dark-900 h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-white/5">
           <div
-            className="bg-brand-positive h-full rounded-full transition-all duration-500"
+            className="gradient-lime-bar h-full rounded-full transition-all duration-500 shadow-sm"
             style={{ width: `${discipline.overallScore}%` }}
           />
         </div>

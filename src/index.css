@@ -3,14 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --color-bg-primary: #090A0F;
-  --color-bg-secondary: #111318;
-  --color-bg-card: #171A21;
-  --color-bg-elevated: #1D212A;
-  --color-text-primary: #F5F7FA;
-  --color-text-secondary: #9AA3B2;
-  --color-text-muted: #64748B;
-  --color-border: #272C36;
+  --color-bg-primary: #090e09;
+  --color-bg-secondary: #0f150f;
+  --color-bg-card: #141c14;
+  --color-bg-elevated: #1c261c;
+  --color-text-primary: #f5f7f2;
+  --color-text-secondary: #9aa89a;
+  --color-text-muted: #647364;
+  --color-border: rgba(184, 243, 49, 0.1);
+  --color-accent-lime: #b8f331;
 }
 
 html.light {
@@ -22,12 +23,17 @@ html.light {
   --color-text-secondary: #64748B;
   --color-text-muted: #94A3B8;
   --color-border: #E2E8F0;
+  --color-accent-lime: #65a30d;
 }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--color-bg-primary);
+  background-image: 
+    radial-gradient(circle at 50% -5%, rgba(184, 243, 49, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(56, 189, 248, 0.03) 0%, transparent 35%);
+  background-attachment: fixed;
   color: var(--color-text-primary);
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -42,33 +48,71 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
+  background: rgba(184, 243, 49, 0.18);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C9A227;
+  background: #b8f331;
 }
 
 .glass-panel {
-  background: rgba(23, 26, 33, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(39, 44, 54, 0.8);
+  background: rgba(20, 28, 20, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(184, 243, 49, 0.1);
+  border-radius: 1.5rem;
 }
 
 .glass-panel-interactive {
-  background: rgba(23, 26, 33, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(39, 44, 54, 0.8);
+  background: rgba(20, 28, 20, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(184, 243, 49, 0.1);
+  border-radius: 1.5rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel-interactive:hover {
-  background: rgba(29, 33, 42, 0.9);
-  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(28, 38, 28, 0.92);
+  border-color: rgba(184, 243, 49, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.65), 0 0 20px -3px rgba(184, 243, 49, 0.18);
+}
+
+/* Iconic Standout White / Ivory KPI Card from image */
+.card-ivory-highlight {
+  background: #f7f9f3 !important;
+  border: 1px solid #ffffff !important;
+  color: #090e09 !important;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.45), 0 0 25px rgba(255, 255, 255, 0.08) !important;
+}
+.card-ivory-highlight * {
+  color: #090e09;
+}
+
+/* Pill Navigation & Controls */
+.pill-nav-active {
+  background-color: #b8f331 !important;
+  color: #090e09 !important;
+  font-weight: 800 !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 0 20px rgba(184, 243, 49, 0.35) !important;
+}
+
+.pill-nav-inactive {
+  color: #9aa89a;
+  border-radius: 9999px;
+  transition: all 0.15s ease-in-out;
+}
+.pill-nav-inactive:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Neon Gradient Progress Bar */
+.gradient-lime-bar {
+  background: linear-gradient(90deg, #b8f331 0%, #84cc16 65%, #166534 100%);
 }
 
 /* ==========================================================================

@@ -22,35 +22,39 @@ export default {
         border: {
           subtle: 'var(--color-border)',
         },
-          brand: {
-          positive: '#35C98A',
-          negative: '#F05D5E',
-          warning: '#F2B84B',
-          accent: '#C9A227',
-          accentHover: '#E0B530',
+        brand: {
+          positive: '#b8f331',          // Electric Volt Lime Green
+          positiveLight: '#d6f96b',
+          negative: '#fb7185',          // Soft Coral Salmon Pink/Red
+          negativeLight: '#fda4af',
+          warning: '#facc15',
+          accent: '#b8f331',            // Signature Electric Lime
+          accentHover: '#c6f849',
+          accentDark: '#4d7c0f',
+          cyan: '#38bdf8',              // Doughnut/Chart secondary
         },
         dark: {
-          950: '#080a0f',
-          900: '#0d111a',
-          850: '#111724',
-          800: '#161e30',
-          700: '#1f2940',
-          600: '#2b3956',
+          950: '#090e09',               // Deepest obsidian forest black
+          900: '#0f150f',               // Dark moss secondary
+          850: '#141c14',               // Card surface
+          800: '#1c261c',               // Elevated surface
+          700: '#233223',               // Subtle moss border
+          600: '#2f422f',
         },
         trade: {
-          green: '#10b981',
-          'green-light': '#34d399',
-          'green-dark': '#047857',
-          'green-bg': 'rgba(16, 185, 129, 0.12)',
-          red: '#ef4444',
-          'red-light': '#f87171',
-          'red-dark': '#b91c1c',
-          'red-bg': 'rgba(239, 68, 68, 0.12)',
-          blue: '#3b82f6',
-          'blue-light': '#60a5fa',
-          cyan: '#06b6d4',
-          purple: '#a855f7',
-          amber: '#f59e0b',
+          green: '#b8f331',             // Electric lime
+          'green-light': '#d6f96b',
+          'green-dark': '#4d7c0f',
+          'green-bg': 'rgba(184, 243, 49, 0.14)',
+          red: '#fb7185',               // Coral salmon
+          'red-light': '#fda4af',
+          'red-dark': '#be123c',
+          'red-bg': 'rgba(251, 113, 133, 0.14)',
+          blue: '#38bdf8',
+          'blue-light': '#7dd3fc',
+          cyan: '#22d3ee',
+          purple: '#c084fc',
+          amber: '#fbbf24',
         }
       },
       fontFamily: {
@@ -58,8 +62,12 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        'subtle': '0 2px 10px rgba(0, 0, 0, 0.2)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.45)',
+        'subtle': '0 2px 10px rgba(0, 0, 0, 0.3)',
+        'lime-glow': '0 0 25px -3px rgba(184, 243, 49, 0.28)',
+        'lime-sm': '0 0 12px -2px rgba(184, 243, 49, 0.35)',
+        'coral-glow': '0 0 25px -3px rgba(251, 113, 133, 0.28)',
+        'card-glow': '0 18px 40px -15px rgba(0, 0, 0, 0.6)',
       }
     },
   },
