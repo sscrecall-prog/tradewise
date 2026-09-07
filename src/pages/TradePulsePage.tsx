@@ -17,9 +17,18 @@ import { TradePulseStorage } from '../services/tradepulse/tradePulseStorage';
 import { DEFAULT_NIFTY_CSV } from '../services/tradepulse/defaultData';
 import { DailySnapshot, AnalyzedStock, PaperTrade } from '../types/tradepulse';
 import { useApp } from '../context/AppContext';
+import { useMarketData } from '../context/MarketDataContext';
 
 export const TradePulsePage: React.FC = () => {
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useApp();
+  const { 
+    quotes, 
+    indices, 
+    isLiveConnected, 
+    lastLiveUpdate, 
+    refreshData, 
+    isLoading: isMarketLoading 
+  } = useMarketData();
 
   // Snapshot State
   const [snapshots, setSnapshots] = useState<DailySnapshot[]>([]);
@@ -50,12 +59,78 @@ export const TradePulsePage: React.FC = () => {
     return snapshots.find(s => s.id === activeSnapshotId) || snapshots[0] || null;
   }, [snapshots, activeSnapshotId]);
 
-  // Analyzed dataset for current snapshot
+  // Analyzed dataset for current snapshot merged with live market quotes
   const { stocks, marketPulse } = useMemo(() => {
     const csv = activeSnapshot?.rawCsv || DEFAULT_NIFTY_CSV;
     const rawRows = parseNiftyCsv(csv);
-    return analyzeNiftyDataset(rawRows);
-  }, [activeSnapshot]);
+
+    // Merge live market feed data into rows when available
+    const updatedRows = rawRows.map(row => {
+      const isIndex = row.symbol.toUpperCase().includes('NIFTY') ||
+                      row.symbol.toUpperCase().includes('INDEX') ||
+                      row.symbol.toUpperCase().includes('SENSEX');
+
+      if (isIndex) {
+        const liveIndex = indices.find(
+          idx => idx.symbol.toUpperCase() === 'NIFTY' || 
+                 row.symbol.toUpperCase().includes(idx.symbol.toUpperCase())
+        );
+        if (liveIndex && liveIndex.price > 0) {
+          return {
+            ...row,
+            ltp: liveIndex.price,
+            change: liveIndex.change,
+            changePercent: liveIndex.changePercent,
+            high: Math.max(row.high, liveIndex.price),
+            low: Math.min(row.low, liveIndex.price)
+          };
+        }
+        return row;
+      }
+
+      const liveQuote = quotes.find(q => {
+        const qSym = q.symbol.toUpperCase();
+        const rSym = row.symbol.toUpperCase();
+        if (qSym === rSym) return true;
+        if (qSym === 'TMPV' && rSym === 'TATAMOTORS') return true;
+        if (qSym === 'TATAMOTORS' && rSym === 'TMPV') return true;
+        if (qSym === 'ETERNAL' && rSym === 'ZOMATO') return true;
+        if (qSym === 'ZOMATO' && rSym === 'ETERNAL') return true;
+        return false;
+      });
+
+      if (liveQuote && liveQuote.price > 0) {
+        const ltp = liveQuote.price;
+        const change = liveQuote.change ?? row.change;
+        const changePercent = liveQuote.changePercent ?? row.changePercent;
+        const high = Math.max(row.high, liveQuote.high || row.high, ltp);
+        const low = Math.min(row.low, liveQuote.low || row.low, ltp);
+        const open = liveQuote.open || row.open;
+        const prevClose = liveQuote.prevClose || row.prevClose;
+        const volume = liveQuote.volume || row.volume;
+        const high52W = liveQuote.high52W || row.high52W;
+        const low52W = liveQuote.low52W || row.low52W;
+
+        return {
+          ...row,
+          ltp,
+          change,
+          changePercent,
+          high,
+          low,
+          open,
+          prevClose,
+          volume,
+          high52W,
+          low52W
+        };
+      }
+
+      return row;
+    });
+
+    return analyzeNiftyDataset(updatedRows);
+  }, [activeSnapshot, quotes, indices]);
 
   // Watchlist toggle handler (syncs both TradePulse local and TradeWize global watchlist)
   const handleToggleWatchlist = (symbol: string) => {
@@ -216,6 +291,10 @@ export const TradePulsePage: React.FC = () => {
         indexSymbol={marketPulse.indexSymbol}
         paperTradesCount={paperTrades.length}
         onOpenPaperModal={() => setIsPaperModalOpen(true)}
+        isLiveConnected={isLiveConnected}
+        lastLiveUpdate={lastLiveUpdate}
+        onRefreshLive={refreshData}
+        isRefreshing={isMarketLoading}
       />
 
       {/* Main Analysis Sections */}

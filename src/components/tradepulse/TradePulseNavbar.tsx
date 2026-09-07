@@ -24,6 +24,10 @@ export interface TradePulseNavbarProps {
   indexSymbol: string;
   paperTradesCount: number;
   onOpenPaperModal: () => void;
+  isLiveConnected?: boolean;
+  lastLiveUpdate?: string | null;
+  onRefreshLive?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
@@ -37,7 +41,11 @@ export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
   totalStocks,
   indexSymbol,
   paperTradesCount,
-  onOpenPaperModal
+  onOpenPaperModal,
+  isLiveConnected = false,
+  lastLiveUpdate = null,
+  onRefreshLive,
+  isRefreshing = false
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/95 dark:bg-dark-950/90 backdrop-blur-md border-b border-slate-200 dark:border-dark-800/80 px-4 lg:px-8 py-3 transition-all shadow-sm dark:shadow-none">
@@ -50,20 +58,32 @@ export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span className="text-trade-green font-mono">{indexSymbol || 'NIFTY 50'}</span> <span className="bg-gradient-to-r from-trade-green via-emerald-500 to-cyan-500 bg-clip-text text-transparent">Analysis Platform Pro</span>
               </h1>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-trade-green-bg text-trade-green border border-trade-green/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-trade-green animate-pulse-subtle"></span>
-                ACTIVE FEED
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                isLiveConnected 
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                  : 'bg-trade-green-bg text-trade-green border border-trade-green/30'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-trade-green'}`}></span>
+                {isLiveConnected ? 'LIVE NSE FEED' : 'ACTIVE FEED'}
               </span>
             </div>
             
-            <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium">
-              <span>{activeSnapshot?.dateStr || 'Live Bhavcopy'}</span>
+            <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium flex-wrap">
+              <span>{activeSnapshot?.dateStr || 'Live Market Bhavcopy'}</span>
               <span className="text-slate-400 dark:text-slate-600">•</span>
               <span className="text-slate-800 dark:text-slate-300 font-mono font-bold">{totalStocks} Equities Analyzed</span>
+              {lastLiveUpdate && (
+                <>
+                  <span className="text-slate-400 dark:text-slate-600">•</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[11px] font-bold">
+                    Synced: {lastLiveUpdate}
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -101,6 +121,19 @@ export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
+          {/* Sync Live NSE Button */}
+          {onRefreshLive && (
+            <button
+              onClick={onRefreshLive}
+              disabled={isRefreshing}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/60 text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              title="Fetch real-time updated prices directly from NSE live feed"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Syncing...' : 'Sync Live NSE'}</span>
+            </button>
+          )}
+
           {/* Paper Trading Book Button */}
           <button
             onClick={onOpenPaperModal}

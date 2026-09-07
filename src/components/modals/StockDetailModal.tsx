@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 export const StockDetailModal: React.FC = () => {
-  const { selectedStockSymbol, closeStockModal, getQuote, getHistoricalData } = useMarketData();
+  const { selectedStockSymbol, closeStockModal, getQuote, getHistoricalData, fetchAndAddQuote } = useMarketData();
   const {
     isInWatchlist,
     addToWatchlist,
@@ -38,6 +38,13 @@ export const StockDetailModal: React.FC = () => {
 
   const quote = selectedStockSymbol ? getQuote(selectedStockSymbol) : undefined;
   const inWatchlist = selectedStockSymbol ? isInWatchlist(selectedStockSymbol) : false;
+
+  // Auto-fetch quote if not present in cached quotes
+  useEffect(() => {
+    if (selectedStockSymbol && !quote) {
+      fetchAndAddQuote(selectedStockSymbol);
+    }
+  }, [selectedStockSymbol, quote, fetchAndAddQuote]);
 
   // Fetch genuine historical candlestick data
   useEffect(() => {
