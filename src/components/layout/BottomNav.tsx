@@ -5,7 +5,8 @@ import {
   Calculator,
   BookOpen,
   Briefcase,
-  User
+  User,
+  Flame
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -14,6 +15,7 @@ export const BottomNav: React.FC = () => {
 
   const navItems = [
     { id: "dashboard", label: "Home", icon: <LayoutDashboard className="w-5 h-5" /> },
+    { id: "tradepulse", label: "Nifty 50", icon: <Flame className="w-5 h-5 text-emerald-400" /> },
     { id: "markets", label: "Markets", icon: <TrendingUp className="w-5 h-5" /> },
     { id: "planner", label: "Trade", icon: <Calculator className="w-5 h-5" /> },
     { id: "journal", label: "Journal", icon: <BookOpen className="w-5 h-5" /> },

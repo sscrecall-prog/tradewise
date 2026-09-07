@@ -11,7 +11,8 @@ import {
   Settings,
   ShieldAlert,
   Sparkles,
-  Bookmark
+  Bookmark,
+  Flame
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 
@@ -23,6 +24,12 @@ export const Sidebar: React.FC = () => {
 
   const mainNavItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    {
+      id: "tradepulse",
+      label: "NIFTY 50 Analyzer",
+      icon: <Flame className="w-4 h-4 text-emerald-400" />,
+      badge: "AI Pro"
+    },
     { id: "markets", label: "Markets", icon: <TrendingUp className="w-4 h-4" /> },
     { id: "watchlist", label: "Watchlist", icon: <Bookmark className="w-4 h-4" /> },
     { id: "planner", label: "Trade Planner", icon: <Calculator className="w-4 h-4" /> },

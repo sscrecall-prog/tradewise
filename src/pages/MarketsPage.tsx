@@ -24,7 +24,7 @@ import {
 
 export const MarketsPage: React.FC = () => {
   const { quotes, indices, openStockModal, searchAllIndianStocks, isLiveConnected, lastLiveUpdate } = useMarketData();
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist, setIsPlaceOrderModalOpen, setSelectedStockForOrder } = useApp();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist, setIsPlaceOrderModalOpen, setSelectedStockForOrder, setActiveTab } = useApp();
 
   const [search, setSearch] = useState("");
   const [selectedSector, setSelectedSector] = useState("ALL");
@@ -79,6 +79,42 @@ export const MarketsPage: React.FC = () => {
             <strong>2,540</strong> Listed Equities Indexed
           </span>
         </div>
+      </div>
+
+      {/* TradePulse Pro Engine Launch Banner */}
+      <div 
+        onClick={() => setActiveTab("tradepulse")}
+        className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-bg-card to-cyan-950/30 border border-emerald-500/30 hover:border-emerald-500/60 cursor-pointer transition-all shadow-lg group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center ring-1 ring-emerald-500/40 group-hover:scale-105 transition-transform">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                NIFTY TradePulse Pro Engine
+              </h3>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                5-STAR CONFIRMATION
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-0.5">
+              Daily CSV Bhavcopy Analysis, Setup Grades (A+, A, B), Floor & Camarilla Pivots, and Top 10 Gainers & Losers Arena
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveTab("tradepulse");
+          }}
+          className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-950 text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20 self-start sm:self-auto whitespace-nowrap"
+        >
+          <span>Launch TradePulse Pro</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </button>
       </div>
 
       {/* Indices Bar */}

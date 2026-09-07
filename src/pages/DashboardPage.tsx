@@ -23,7 +23,8 @@ import {
   ShieldAlert,
   Calculator,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Flame
 } from "lucide-react";
 
 export const DashboardPage: React.FC = () => {
@@ -84,6 +85,35 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* NIFTY 50 Algorithmic Analysis Platform Banner */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-bg-card via-bg-card to-emerald-950/25 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0 shadow-sm">
+            <Flame className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-text-primary">
+                NIFTY 50 Algorithmic Decision & Analysis Platform
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                5-Star Setups
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-0.5">
+              52W Breakouts, Camarilla pivots, Open=Low/High patterns & institutional turnover across Nifty 50 companies.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setActiveTab("tradepulse")}
+          className="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-dark-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all flex-shrink-0"
+        >
+          <span>Launch NIFTY 50 Platform</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Circuit Breaker Warning Alert if loss limit exceeded */}

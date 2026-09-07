@@ -56,11 +56,209 @@ body {
   border: 1px solid rgba(39, 44, 54, 0.8);
 }
 
-html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
+.glass-panel-interactive {
+  background: rgba(23, 26, 33, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  border: 1px solid rgba(39, 44, 54, 0.8);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-interactive:hover {
+  background: rgba(29, 33, 42, 0.9);
+  border-color: rgba(16, 185, 129, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   LIGHT MODE CONTRAST & VISIBILITY ENGINE
+   ========================================================================== */
+html.light .glass-panel,
+html.light .glass-panel-interactive {
+  background: #ffffff !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+}
+
+html.light .glass-panel-interactive:hover {
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Global Light Mode text visibility */
+html.light .tradepulse-scope {
+  color: #0F172A;
+}
+
+/* In Light Mode, force high contrast for headings & white/light text */
+html.light .tradepulse-scope .text-white,
+html.light .glass-panel .text-white,
+html.light .glass-panel-interactive .text-white {
+  color: #0F172A !important;
+}
+
+html.light .tradepulse-scope .text-slate-100,
+html.light .glass-panel .text-slate-100,
+html.light .glass-panel-interactive .text-slate-100 {
+  color: #0F172A !important;
+}
+
+html.light .tradepulse-scope .text-slate-200,
+html.light .glass-panel .text-slate-200,
+html.light .glass-panel-interactive .text-slate-200 {
+  color: #1E293B !important;
+}
+
+html.light .tradepulse-scope .text-slate-300,
+html.light .glass-panel .text-slate-300,
+html.light .glass-panel-interactive .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .tradepulse-scope .text-slate-400,
+html.light .glass-panel .text-slate-400,
+html.light .glass-panel-interactive .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light .tradepulse-scope .text-slate-500,
+html.light .glass-panel .text-slate-500,
+html.light .glass-panel-interactive .text-slate-500 {
+  color: #64748B !important;
+}
+
+/* Headings in Light Mode */
+html.light .tradepulse-scope h1,
+html.light .tradepulse-scope h2,
+html.light .tradepulse-scope h3 {
+  color: #0F172A !important;
+}
+
+/* Maintain crisp white text on colored solid badges/buttons */
+html.light .tradepulse-scope button.bg-purple-500,
+html.light .tradepulse-scope button.bg-purple-500 *,
+html.light .tradepulse-scope .bg-purple-500 .text-white,
+html.light .tradepulse-scope .bg-purple-600 .text-white,
+html.light .tradepulse-scope .bg-rose-500 .text-white,
+html.light .tradepulse-scope .bg-trade-red .text-white,
+html.light .tradepulse-scope .keep-white {
+  color: #FFFFFF !important;
+}
+
+/* Dark text for green/cyan buttons */
+html.light .tradepulse-scope .bg-trade-green,
+html.light .tradepulse-scope .bg-trade-green * {
+  color: #080A0F !important;
+}
+
+/* Light mode backgrounds for header & inner sections */
+html.light .tradepulse-scope header,
+html.light .tradepulse-scope .bg-dark-950\/90 {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.light .tradepulse-scope .bg-dark-900,
+html.light .glass-panel .bg-dark-900,
+html.light .glass-panel-interactive .bg-dark-900,
+html.light .tradepulse-scope .bg-dark-900\/90,
+html.light .tradepulse-scope .bg-dark-900\/80 {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.light .tradepulse-scope .bg-dark-850,
+html.light .glass-panel .bg-dark-850,
+html.light .glass-panel-interactive .bg-dark-850,
+html.light .tradepulse-scope .bg-dark-850\/50,
+html.light .tradepulse-scope .bg-dark-850\/80 {
+  background-color: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+}
+
+html.light .tradepulse-scope .bg-dark-800,
+html.light .glass-panel .bg-dark-800,
+html.light .glass-panel-interactive .bg-dark-800 {
+  background-color: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
+  color: #1E293B !important;
+}
+
+html.light .tradepulse-scope .border-dark-800,
+html.light .tradepulse-scope .border-dark-700,
+html.light .tradepulse-scope .border-dark-800\/80,
+html.light .tradepulse-scope .border-dark-800\/90,
+html.light .tradepulse-scope .border-dark-800\/60,
+html.light .tradepulse-scope .border-dark-700\/70,
+html.light .glass-panel .border-dark-800,
+html.light .glass-panel-interactive .border-dark-800 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Screener Table styling in light mode */
+html.light .tradepulse-scope thead,
+html.light .tradepulse-scope thead.bg-dark-900\/95 {
+  background-color: #F8FAFC !important;
+  border-bottom: 2px solid #E2E8F0 !important;
+}
+
+html.light .tradepulse-scope thead th {
+  color: #334155 !important;
+  font-weight: 700 !important;
+}
+
+html.light .tradepulse-scope tbody tr {
+  border-color: #F1F5F9 !important;
+}
+
+html.light .tradepulse-scope tbody tr:hover {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .tradepulse-scope tbody td {
+  border-color: #F1F5F9 !important;
+}
+
+/* Search inputs in light mode */
+html.light .tradepulse-scope input[type="text"] {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+html.light .tradepulse-scope input[type="text"]::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Modal Backdrops & Dialogs in Light Mode */
+html.light .tradepulse-scope .bg-dark-950\/85 {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+}
+
+/* Trader Rationale Box in Light Mode */
+html.light .tradepulse-scope .bg-dark-850\/50 {
+  background-color: #F0FDF4 !important;
+  border: 1px solid #BBF7D0 !important;
+  color: #14532D !important;
+}
+
+html.light .tradepulse-scope .bg-dark-850\/50 span.text-trade-green {
+  color: #15803D !important;
+  font-weight: 700 !important;
+}
+
+/* Position & Risk Calculator Button on Cards */
+html.light .tradepulse-scope button.bg-dark-800 {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+html.light .tradepulse-scope button.bg-dark-800:hover {
+  background-color: #E2E8F0 !important;
+  color: #0F172A !important;
 }
 
 /* Smooth chart animation transitions */
