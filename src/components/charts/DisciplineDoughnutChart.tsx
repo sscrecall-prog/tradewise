@@ -32,7 +32,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
   const dOffset = -(pLength + passLength);
 
   return (
-    <div className={`p-5 rounded-3xl bg-dark-900 border border-border-subtle shadow-card-glow flex flex-col justify-between ${className}`}>
+    <div className={`p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
@@ -43,7 +43,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
             Rule execution consistency & emotional control
           </p>
         </div>
-        <span className="px-2.5 py-1 rounded-full bg-brand-accent/15 border border-brand-accent/30 text-brand-accent text-xs font-black">
+        <span className="px-2.5 py-1 rounded-full bg-brand-accent/15 border border-brand-accent/30 text-brand-positive font-black text-xs">
           Top 5% Tier
         </span>
       </div>
@@ -51,27 +51,29 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
       {/* Tri-color Donut Chart */}
       <div className="relative flex items-center justify-center my-4">
         <svg className="w-44 h-44 transform -rotate-90" viewBox="0 0 160 160">
-          {/* Background Track */}
+          {/* Background Track - Theme aware */}
           <circle
             cx="80"
             cy="80"
             r={r}
-            stroke="#1c261c"
+            stroke="currentColor"
             strokeWidth="14"
             fill="transparent"
+            className="text-slate-200 dark:text-[#1c261c]"
           />
 
-          {/* Promoters Arc - Volt Lime (#b8f331) */}
+          {/* Promoters Arc - Volt Lime (#b8f331 / #65a30d) */}
           <circle
             cx="80"
             cy="80"
             r={r}
-            stroke="#b8f331"
+            stroke="currentColor"
             strokeWidth="14"
             strokeDasharray={`${pLength} ${circumference - pLength}`}
             strokeDashoffset={pOffset}
             strokeLinecap="round"
             fill="transparent"
+            className="text-emerald-500 dark:text-[#b8f331]"
           />
 
           {/* Passives Arc - Sky Blue (#38bdf8) */}
@@ -115,28 +117,28 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
         </div>
       </div>
 
-      {/* Legend Rows matching the mockup */}
-      <div className="space-y-2 pt-2 border-t border-white/5 text-xs">
-        <div className="flex items-center justify-between p-2 rounded-2xl bg-dark-950/60 border border-white/5">
+      {/* Legend Rows matching the mockup - Theme aware */}
+      <div className="space-y-2 pt-2 border-t border-border-subtle text-xs">
+        <div className="flex items-center justify-between p-2 rounded-2xl bg-bg-secondary border border-border-subtle">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-accent shadow-lime-sm" />
-            <span className="text-zinc-300 font-medium">Clean Rule Execution</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-brand-accent shadow-lime-sm" />
+            <span className="text-text-primary font-medium">Clean Rule Execution</span>
           </div>
-          <span className="font-extrabold text-brand-accent font-mono">{promoters}%</span>
+          <span className="font-extrabold text-emerald-600 dark:text-brand-accent font-mono">{promoters}%</span>
         </div>
 
-        <div className="flex items-center justify-between p-2 rounded-2xl bg-dark-950/60 border border-white/5">
+        <div className="flex items-center justify-between p-2 rounded-2xl bg-bg-secondary border border-border-subtle">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-trade-blue" />
-            <span className="text-zinc-300 font-medium">Controlled Scratches</span>
+            <span className="text-text-primary font-medium">Controlled Scratches</span>
           </div>
           <span className="font-extrabold text-trade-blue font-mono">{passives}%</span>
         </div>
 
-        <div className="flex items-center justify-between p-2 rounded-2xl bg-dark-950/60 border border-white/5">
+        <div className="flex items-center justify-between p-2 rounded-2xl bg-bg-secondary border border-border-subtle">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-negative shadow-coral-glow" />
-            <span className="text-zinc-300 font-medium">Impulsive / FOMO Mistakes</span>
+            <span className="text-text-primary font-medium">Impulsive / FOMO Mistakes</span>
           </div>
           <span className="font-extrabold text-brand-negative font-mono">{detractors}%</span>
         </div>

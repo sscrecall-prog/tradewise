@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { useMarketData } from "../context/MarketDataContext";
-import { Card } from "../components/common/Card";
 import { Button } from "../components/common/Button";
 import { Badge } from "../components/common/Badge";
 import { EquityCurveChart } from "../components/charts/EquityCurveChart";
@@ -11,25 +10,16 @@ import { BrokerImportModal } from "../components/modals/BrokerImportModal";
 import { PrePostMarketModal } from "../components/modals/PrePostMarketModal";
 import { JournalEntry } from "../types";
 import {
-  TrendingUp,
-  TrendingDown,
-  Plus,
   ArrowUpRight,
   ArrowDownRight,
   UploadCloud,
   Sun,
   Moon,
-  Sparkles,
+  Plus,
   ShieldAlert,
-  Calculator,
   ChevronRight,
   BookOpen,
-  Flame,
-  Target,
-  BarChart3,
-  Percent,
-  CheckCircle2,
-  AlertTriangle
+  Flame
 } from "lucide-react";
 
 export const DashboardPage: React.FC = () => {
@@ -39,7 +29,6 @@ export const DashboardPage: React.FC = () => {
     discipline,
     todayPnL,
     todayTradesCount,
-    todayRiskUsed,
     preferences,
     setIsNewTradeModalOpen,
     setActiveTab
@@ -57,29 +46,28 @@ export const DashboardPage: React.FC = () => {
   // Daily Loss Limit calculations
   const maxLoss = preferences.maxDailyLoss || 1000;
   const currentLoss = todayPnL < 0 ? Math.abs(todayPnL) : 0;
-  const lossPercentage = Math.min(100, Math.round((currentLoss / maxLoss) * 100));
   const isCircuitBreakerHit = currentLoss >= maxLoss;
 
   // Annual target calculations (e.g. ₹10 Lakhs baseline target)
   const annualTarget = 1000000;
-  const currentAccumulated = Math.max(0, analytics.netPnL + 650000); // realistic milestone data
+  const currentAccumulated = Math.max(0, analytics.netPnL + 650000);
   const targetPct = Math.min(100, Number(((currentAccumulated / annualTarget) * 100).toFixed(1)));
 
   // Strategy setups Win Rates from journal or realistic baseline
-  const setupBreakout = { name: "Breakout", winRate: 68, count: 18 };
-  const setupMomentum = { name: "Momentum", winRate: 74, count: 24 };
-  const setupPullback = { name: "Pullback", winRate: 58, count: 12 };
-  const setupReversal = { name: "Reversal", winRate: 71, count: 15 };
+  const setupBreakout = { name: "Breakout", winRate: 68 };
+  const setupMomentum = { name: "Momentum", winRate: 74 };
+  const setupPullback = { name: "Pullback", winRate: 58 };
+  const setupReversal = { name: "Reversal", winRate: 71 };
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Top Strip: Live Indian Market Indices with Obsidian Pill Styling */}
+      {/* Top Strip: Live Indian Market Indices */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {indices.map(idx => (
           <div
             key={idx.symbol}
             onClick={() => openStockModal(idx.symbol)}
-            className="p-3.5 rounded-3xl bg-dark-900 border border-border-subtle hover:border-brand-accent/40 cursor-pointer transition-all hover:scale-[1.01] shadow-card-glow flex flex-col justify-between group"
+            className="p-3.5 rounded-3xl bg-bg-card border border-border-subtle hover:border-brand-accent/50 cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-card-glow flex flex-col justify-between group"
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-text-secondary group-hover:text-text-primary transition-colors">
@@ -88,7 +76,7 @@ export const DashboardPage: React.FC = () => {
               <span
                 className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                   idx.isPositive
-                    ? "bg-brand-accent/15 text-brand-accent border border-brand-accent/30"
+                    ? "bg-brand-positive/15 text-brand-positive border border-brand-positive/30"
                     : "bg-brand-negative/15 text-brand-negative border border-brand-negative/30"
                 }`}
               >
@@ -111,16 +99,16 @@ export const DashboardPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Signature 4-Card Hero Row matching the Boostify Mockup */}
+      {/* Signature 4-Card Hero Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Signature High-Contrast Ivory Card (Boostify highlight) */}
-        <div className="card-ivory-highlight p-5 flex flex-col justify-between">
+        {/* Card 1: Signature High-Contrast Ivory Card */}
+        <div className="card-ivory-highlight p-5 flex flex-col justify-between rounded-3xl">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
+              <span className="text-[11px] font-black text-text-muted uppercase tracking-wider">
                 Today's Realized Net P&L
               </span>
-              <div className="text-2xl sm:text-3xl font-black text-[#090e09] mt-1 tracking-tight">
+              <div className="text-2xl sm:text-3xl font-black text-text-primary mt-1 tracking-tight">
                 {todayPnL >= 0 ? "+₹" : "-₹"}{Math.abs(todayPnL).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
             </div>
@@ -129,14 +117,14 @@ export const DashboardPage: React.FC = () => {
               <span>+18.5%</span>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-300/60 flex items-center justify-between text-xs text-slate-600 font-medium">
+          <div className="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-xs text-text-secondary font-medium">
             <span>vs yesterday (+₹2,450)</span>
-            <span className="font-bold text-[#090e09]">{todayTradesCount} Trades logged</span>
+            <span className="font-bold text-text-primary">{todayTradesCount} Trades logged</span>
           </div>
         </div>
 
-        {/* Card 2: Dark Obsidian Card - Daily Turnover & Charges */}
-        <div className="p-5 rounded-3xl bg-dark-900 border border-border-subtle shadow-card-glow flex flex-col justify-between">
+        {/* Card 2: Operating Friction / Charges */}
+        <div className="p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
@@ -151,14 +139,14 @@ export const DashboardPage: React.FC = () => {
               <span>-4.8%</span>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs text-text-muted">
+          <div className="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-xs text-text-muted">
             <span>STT & Brokerage impact</span>
             <span className="text-brand-positive font-bold">Under Limit</span>
           </div>
         </div>
 
-        {/* Card 3: 2x2 Strategy Setups Grid (Signature Boostify feature) */}
-        <div className="p-5 rounded-3xl bg-dark-900 border border-border-subtle shadow-card-glow flex flex-col justify-between">
+        {/* Card 3: 2x2 Strategy Setups Grid */}
+        <div className="p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
               Top Edge Setups
@@ -172,7 +160,7 @@ export const DashboardPage: React.FC = () => {
             {[setupBreakout, setupMomentum, setupPullback, setupReversal].map(s => (
               <div
                 key={s.name}
-                className="p-2 rounded-2xl bg-dark-950/80 border border-white/5 flex items-center justify-between"
+                className="p-2 rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-between"
               >
                 <div className="leading-tight">
                   <div className="text-[11px] font-bold text-text-secondary">{s.name}</div>
@@ -186,8 +174,8 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 4: Annual Profit / Capital Target Card ("Corporate Year Plan" style) */}
-        <div className="p-5 rounded-3xl bg-dark-900 border border-border-subtle shadow-card-glow flex flex-col justify-between">
+        {/* Card 4: Annual Profit Target */}
+        <div className="p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
@@ -203,7 +191,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           <div className="mt-3 space-y-1.5">
-            <div className="w-full bg-dark-950 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/5">
+            <div className="w-full bg-bg-elevated h-2.5 rounded-full overflow-hidden p-0.5 border border-border-subtle">
               <div
                 className="gradient-lime-bar h-full rounded-full transition-all duration-500 shadow-lime-sm"
                 style={{ width: `${targetPct}%` }}
@@ -239,28 +227,28 @@ export const DashboardPage: React.FC = () => {
 
           {/* Quick Metrics Strip below Chart */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-            <div className="p-3 rounded-2xl bg-dark-900 border border-border-subtle flex flex-col">
+            <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
               <span className="text-[10px] font-bold text-text-muted uppercase">Gross Profit</span>
               <span className="text-sm font-black text-brand-positive mt-0.5">
                 +₹{analytics.grossPnL.toLocaleString("en-IN")}
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-dark-900 border border-border-subtle flex flex-col">
+            <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
               <span className="text-[10px] font-bold text-text-muted uppercase">Win Rate</span>
               <span className="text-sm font-black text-text-primary mt-0.5">
                 {analytics.winRate}% ({analytics.winningTrades}W / {analytics.losingTrades}L)
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-dark-900 border border-border-subtle flex flex-col">
+            <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
               <span className="text-[10px] font-bold text-text-muted uppercase">Profit Factor</span>
               <span className="text-sm font-black text-brand-accent mt-0.5">
                 {analytics.profitFactor.toFixed(2)}
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl bg-dark-900 border border-border-subtle flex flex-col">
+            <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
               <span className="text-[10px] font-bold text-text-muted uppercase">Expectancy</span>
               <span className="text-sm font-black text-text-primary mt-0.5">
                 +₹{analytics.expectancy} / trade
@@ -291,7 +279,7 @@ export const DashboardPage: React.FC = () => {
         {/* Left Column: Quick Launch Actions & Operating Friction (4 cols) */}
         <div className="lg:col-span-4 space-y-4">
           {/* NIFTY 50 Algorithmic Scanner Card */}
-          <div className="p-5 rounded-3xl bg-gradient-to-br from-dark-900 via-dark-900 to-[#142314] border border-brand-accent/25 shadow-card-glow space-y-3">
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-bg-card via-bg-card to-emerald-500/10 border border-emerald-500/30 shadow-sm dark:shadow-card-glow space-y-3">
             <div className="flex items-center justify-between">
               <div className="w-10 h-10 rounded-2xl bg-brand-accent/20 border border-brand-accent/30 flex items-center justify-center text-brand-accent">
                 <Flame className="w-5 h-5" />
@@ -318,7 +306,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Quick Journaling Actions Pill Bar */}
-          <div className="p-4 rounded-3xl bg-dark-900 border border-border-subtle space-y-2.5">
+          <div className="p-4 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow space-y-2.5">
             <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
               Trading Journal Controls
             </span>
@@ -326,7 +314,7 @@ export const DashboardPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                icon={<Sun className="w-3.5 h-3.5 text-amber-400" />}
+                icon={<Sun className="w-3.5 h-3.5 text-amber-500" />}
                 onClick={() => {
                   setPrePostMode("PRE");
                   setIsPrePostModalOpen(true);
@@ -338,7 +326,7 @@ export const DashboardPage: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                icon={<Moon className="w-3.5 h-3.5 text-indigo-400" />}
+                icon={<Moon className="w-3.5 h-3.5 text-indigo-500" />}
                 onClick={() => {
                   setPrePostMode("POST");
                   setIsPrePostModalOpen(true);
@@ -370,7 +358,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Right Column: Recent Trades Activity (8 cols) */}
-        <div className="lg:col-span-8 p-5 rounded-3xl bg-dark-900 border border-border-subtle shadow-card-glow flex flex-col justify-between">
+        <div className="lg:col-span-8 p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -383,7 +371,7 @@ export const DashboardPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setActiveTab("journal")}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-dark-950 text-text-secondary hover:text-white border border-white/5 text-xs font-bold transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-secondary hover:bg-bg-elevated text-text-secondary hover:text-text-primary border border-border-subtle text-xs font-bold transition-all shadow-sm"
               >
                 <BookOpen className="w-3.5 h-3.5 text-brand-accent" />
                 <span>View Full Journal ({journal.length})</span>
@@ -417,10 +405,10 @@ export const DashboardPage: React.FC = () => {
                         <tr
                           key={t.id}
                           onClick={() => setSelectedTrade(t)}
-                          className="hover:bg-dark-850/80 cursor-pointer transition-colors"
+                          className="hover:bg-bg-elevated cursor-pointer transition-colors"
                         >
                           <td className="py-3 text-text-muted whitespace-nowrap">
-                            {t.date} <span className="text-[10px] text-zinc-500">{t.time}</span>
+                            {t.date} <span className="text-[10px] text-text-muted">{t.time}</span>
                           </td>
                           <td className="py-3 font-extrabold text-text-primary whitespace-nowrap">
                             {t.stockSymbol}
@@ -443,11 +431,11 @@ export const DashboardPage: React.FC = () => {
                             {t.quantity}
                           </td>
                           <td className="py-3 whitespace-nowrap">
-                            <span className="px-2 py-0.5 rounded-full bg-dark-950 border border-white/5 text-[11px] text-text-secondary font-medium">
+                            <span className="px-2 py-0.5 rounded-full bg-bg-secondary border border-border-subtle text-[11px] text-text-secondary font-medium">
                               {t.setup}
                             </span>
                           </td>
-                          <td className="py-3 text-amber-400/90 font-mono text-[11px] whitespace-nowrap">
+                          <td className="py-3 text-amber-500 font-mono text-[11px] whitespace-nowrap">
                             -₹{t.estimatedCharges}
                           </td>
                           <td className="py-3 text-right font-black whitespace-nowrap">

@@ -10,7 +10,6 @@ import {
   HeartHandshake,
   Settings,
   ShieldAlert,
-  Sparkles,
   Bookmark,
   Flame,
   PanelLeftClose,
@@ -43,7 +42,7 @@ export const Sidebar: React.FC = () => {
     {
       id: "tradepulse",
       label: "NIFTY 50 Analyzer",
-      icon: <Flame className="w-4 h-4 text-emerald-400" />,
+      icon: <Flame className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
       badge: "AI Pro"
     },
     { id: "markets", label: "Markets", icon: <TrendingUp className="w-4 h-4" /> },
@@ -88,7 +87,7 @@ export const Sidebar: React.FC = () => {
       {isMobileSidebarOpen && (
         <div
           onClick={toggleMobileSidebar}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 md:hidden transition-opacity duration-300"
           aria-hidden="true"
         />
       )}
@@ -100,15 +99,15 @@ export const Sidebar: React.FC = () => {
         }`}
       >
         {/* Mobile Header with Close Button */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border-subtle/80">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border-subtle">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-brand-accent/15 border border-brand-accent/30 flex items-center justify-center text-brand-accent shadow-sm">
-              <TrendingUp className="w-5 h-5 text-brand-accent" />
+              <TrendingUp className="w-5 h-5 text-brand-positive" />
             </div>
             <div>
               <h1 className="text-base font-bold text-text-primary tracking-wider flex items-center gap-1.5">
                 TRADEWISE
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-accent font-semibold uppercase">
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-positive font-semibold uppercase">
                   Pro
                 </span>
               </h1>
@@ -117,7 +116,7 @@ export const Sidebar: React.FC = () => {
           </div>
           <button
             onClick={toggleMobileSidebar}
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+            className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
             aria-label="Close sidebar"
           >
             <X className="w-5 h-5" />
@@ -138,17 +137,17 @@ export const Sidebar: React.FC = () => {
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ${
                   isActive
                     ? "bg-brand-accent text-dark-950 font-black shadow-md shadow-lime-400/20 scale-[1.01]"
-                    : "text-zinc-400 hover:text-text-primary hover:bg-white/5"
+                    : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={isActive ? "text-dark-950" : "text-zinc-400"}>{item.icon}</span>
+                  <span className={isActive ? "text-dark-950" : "text-text-secondary"}>{item.icon}</span>
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span
                     className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${
-                      isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-accent"
+                      isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-positive"
                     }`}
                   >
                     {item.badge}
@@ -170,11 +169,11 @@ export const Sidebar: React.FC = () => {
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-150 ${
                   isActive
                     ? "bg-brand-accent text-dark-950 font-black shadow-md shadow-lime-400/20 scale-[1.01]"
-                    : "text-zinc-400 hover:text-text-primary hover:bg-white/5"
+                    : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={isActive ? "text-dark-950" : "text-zinc-400"}>{item.icon}</span>
+                  <span className={isActive ? "text-dark-950" : "text-text-secondary"}>{item.icon}</span>
                   <span>{item.label}</span>
                 </div>
               </button>
@@ -183,12 +182,12 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Mobile Bottom Discipline Card */}
-        <div className="p-4 border border-border-subtle/80 bg-bg-card/70 m-3 rounded-2xl shadow-inner">
+        <div className="p-4 border border-border-subtle bg-bg-card m-3 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
             <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
           </div>
-          <div className="w-full bg-dark-900 h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-white/5">
+          <div className="w-full bg-bg-elevated h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-border-subtle">
             <div
               className="gradient-lime-bar h-full rounded-full transition-all duration-500 shadow-sm"
               style={{ width: `${discipline.overallScore}%` }}
@@ -206,10 +205,10 @@ export const Sidebar: React.FC = () => {
           isSidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
-        {/* Floating Border Edge Chevron Handle (Always clickable to toggle) */}
+        {/* Floating Border Edge Chevron Handle */}
         <button
           onClick={toggleSidebar}
-          className="absolute -right-3 top-7 z-40 w-6 h-6 rounded-full bg-dark-900 hover:bg-dark-850 text-zinc-400 hover:text-brand-accent border border-border-subtle shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+          className="absolute -right-3 top-7 z-40 w-6 h-6 rounded-full bg-bg-card hover:bg-bg-elevated text-text-secondary hover:text-brand-accent border border-border-subtle shadow-md flex items-center justify-center transition-all hover:scale-110 active:scale-95"
           title={isSidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
           aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
@@ -222,7 +221,7 @@ export const Sidebar: React.FC = () => {
 
         {/* Brand Header */}
         <div
-          className={`flex items-center py-5 border-b border-border-subtle/80 ${
+          className={`flex items-center py-5 border-b border-border-subtle ${
             isSidebarCollapsed ? "flex-col justify-center px-2 gap-2" : "justify-between px-5"
           }`}
         >
@@ -233,14 +232,14 @@ export const Sidebar: React.FC = () => {
             }`}
             title="TradeWise Pro Dashboard"
           >
-            <div className="w-9 h-9 rounded-xl bg-brand-accent/15 border border-brand-accent/30 flex items-center justify-center text-brand-accent shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-brand-accent" />
+            <div className="w-9 h-9 rounded-xl bg-brand-accent/15 border border-brand-accent/30 flex items-center justify-center text-brand-positive shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-brand-positive" />
             </div>
             {!isSidebarCollapsed && (
               <div className="overflow-hidden">
                 <h1 className="text-base font-bold text-text-primary tracking-wider flex items-center gap-1.5 whitespace-nowrap">
                   TRADEWISE
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-accent font-semibold uppercase">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-positive font-semibold uppercase">
                     Pro
                   </span>
                 </h1>
@@ -253,7 +252,7 @@ export const Sidebar: React.FC = () => {
           {!isSidebarCollapsed ? (
             <button
               onClick={toggleSidebar}
-              className="p-1.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-brand-accent transition-colors flex-shrink-0"
+              className="p-1.5 rounded-xl hover:bg-bg-elevated text-text-secondary hover:text-brand-accent transition-colors flex-shrink-0"
               title="Collapse sidebar (Ctrl+B)"
               aria-label="Collapse sidebar"
             >
@@ -262,11 +261,11 @@ export const Sidebar: React.FC = () => {
           ) : (
             <button
               onClick={toggleSidebar}
-              className="p-1.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-brand-accent transition-colors mt-1"
+              className="p-1.5 rounded-xl hover:bg-bg-elevated text-text-secondary hover:text-brand-accent transition-colors mt-1"
               title="Expand sidebar (Ctrl+B)"
               aria-label="Expand sidebar"
             >
-              <PanelLeftOpen className="w-4 h-4 text-brand-accent" />
+              <PanelLeftOpen className="w-4 h-4 text-brand-positive" />
             </button>
           )}
         </div>
@@ -292,11 +291,11 @@ export const Sidebar: React.FC = () => {
                   } ${
                     isActive
                       ? "bg-brand-accent text-dark-950 font-black shadow-md shadow-lime-400/20 scale-[1.01]"
-                      : "text-zinc-400 hover:text-text-primary hover:bg-white/5"
+                      : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                   }`}
                 >
                   <div className={`flex items-center ${isSidebarCollapsed ? "justify-center relative" : "gap-3"}`}>
-                    <span className={isActive ? "text-dark-950" : "text-zinc-400"}>
+                    <span className={isActive ? "text-dark-950" : "text-text-secondary"}>
                       {item.icon}
                     </span>
                     {!isSidebarCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
@@ -310,7 +309,7 @@ export const Sidebar: React.FC = () => {
                   {!isSidebarCollapsed && item.badge && (
                     <span
                       className={`px-2 py-0.5 text-[10px] rounded-full font-bold whitespace-nowrap ${
-                        isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-accent"
+                        isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-positive"
                       }`}
                     >
                       {item.badge}
@@ -320,7 +319,7 @@ export const Sidebar: React.FC = () => {
 
                 {/* Floating Tooltip in Collapsed Mode */}
                 {isSidebarCollapsed && (
-                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-dark-950 text-text-primary text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 flex items-center gap-2">
+                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 flex items-center gap-2">
                     <span>{item.label}</span>
                     {item.badge && (
                       <span className="px-1.5 py-0.5 rounded-full bg-brand-accent/20 text-brand-accent text-[9px] font-black">
@@ -339,7 +338,7 @@ export const Sidebar: React.FC = () => {
                 System
               </div>
             ) : (
-              <div className="w-8 mx-auto border-t border-border-subtle/80 my-2" />
+              <div className="w-8 mx-auto border-t border-border-subtle my-2" />
             )}
           </div>
 
@@ -356,11 +355,11 @@ export const Sidebar: React.FC = () => {
                   } ${
                     isActive
                       ? "bg-brand-accent text-dark-950 font-black shadow-md shadow-lime-400/20 scale-[1.01]"
-                      : "text-zinc-400 hover:text-text-primary hover:bg-white/5"
+                      : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
                   }`}
                 >
                   <div className={`flex items-center ${isSidebarCollapsed ? "justify-center" : "gap-3"}`}>
-                    <span className={isActive ? "text-dark-950" : "text-zinc-400"}>
+                    <span className={isActive ? "text-dark-950" : "text-text-secondary"}>
                       {item.icon}
                     </span>
                     {!isSidebarCollapsed && <span className="whitespace-nowrap">{item.label}</span>}
@@ -369,7 +368,7 @@ export const Sidebar: React.FC = () => {
 
                 {/* Floating Tooltip in Collapsed Mode */}
                 {isSidebarCollapsed && (
-                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-dark-950 text-text-primary text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
                     {item.label}
                   </div>
                 )}
@@ -380,12 +379,12 @@ export const Sidebar: React.FC = () => {
 
         {/* Bottom Discipline Card */}
         {!isSidebarCollapsed ? (
-          <div className="p-4 border border-border-subtle/80 bg-bg-card/70 m-3 rounded-2xl shadow-inner">
+          <div className="p-4 border border-border-subtle bg-bg-card m-3 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
               <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
             </div>
-            <div className="w-full bg-dark-900 h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-white/5">
+            <div className="w-full bg-bg-elevated h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-border-subtle">
               <div
                 className="gradient-lime-bar h-full rounded-full transition-all duration-500 shadow-sm"
                 style={{ width: `${discipline.overallScore}%` }}
@@ -398,7 +397,7 @@ export const Sidebar: React.FC = () => {
         ) : (
           <div
             onClick={() => setActiveTab("psychology")}
-            className="p-2.5 mx-auto mb-4 rounded-2xl bg-dark-900 border border-border-subtle cursor-pointer hover:border-brand-accent/40 transition-colors flex flex-col items-center group relative"
+            className="p-2.5 mx-auto mb-4 rounded-2xl bg-bg-card border border-border-subtle cursor-pointer hover:border-brand-accent/40 transition-colors flex flex-col items-center group relative shadow-sm"
             title={`Discipline Score: ${discipline.overallScore}/100`}
           >
             <ShieldAlert className="w-4 h-4 text-brand-positive" />
@@ -407,7 +406,7 @@ export const Sidebar: React.FC = () => {
             </span>
 
             {/* Tooltip */}
-            <div className="absolute left-full ml-3 bottom-2 px-3 py-1.5 rounded-xl bg-dark-950 text-text-primary text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+            <div className="absolute left-full ml-3 bottom-2 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
               Discipline Score: {discipline.overallScore}/100
             </div>
           </div>

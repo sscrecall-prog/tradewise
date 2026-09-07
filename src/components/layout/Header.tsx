@@ -4,16 +4,11 @@ import {
   Sun,
   Moon,
   Plus,
-  Clock,
   TrendingUp,
-  CheckCircle2,
-  AlertCircle,
   RotateCw,
   Sparkles,
   Download,
-  User,
   Flame,
-  Radio,
   PanelLeftClose,
   PanelLeftOpen,
   Menu
@@ -21,13 +16,10 @@ import {
 import { useTheme } from "../../context/ThemeContext";
 import { useMarketData } from "../../context/MarketDataContext";
 import { useApp } from "../../context/AppContext";
-import { Badge } from "../common/Badge";
-import { Button } from "../common/Button";
 
 export const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const {
-    marketStatus,
     quotes,
     openStockModal,
     isLiveConnected,
@@ -76,40 +68,23 @@ export const Header: React.FC = () => {
       t.status,
       t.setup
     ]);
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.href = url;
-    link.download = `TradeWise_Report_${new Date().toISOString().split("T")[0]}.csv`;
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `tradewise_journal_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
-  const [istTime, setIstTime] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
-    { symbol: string; name: string; series?: string; price?: number; change?: number; changePercent?: number }[]
+    Array<{ symbol: string; name: string; series?: string; price?: number; change?: number; changePercent?: number }>
   >([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-      const ist = new Date(utc + 3600000 * 5.5);
-      setIstTime(
-        ist.toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true
-        }) + " IST"
-      );
-    };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -142,13 +117,13 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-20 w-full bg-dark-950/90 backdrop-blur-xl border-b border-border-subtle px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-sm">
+    <header className="sticky top-0 z-20 w-full bg-bg-card/90 dark:bg-dark-950/90 backdrop-blur-xl border-b border-border-subtle px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-sm">
       {/* Left: Mobile Drawer Trigger, Desktop Sidebar Collapse Toggle, and Pill Search Bar */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-xs sm:max-w-sm">
         {/* Mobile Hamburger Drawer Button */}
         <button
           onClick={toggleMobileSidebar}
-          className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-dark-900 text-text-secondary hover:text-brand-accent border border-border-subtle flex-shrink-0 transition-colors"
+          className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-bg-secondary text-text-secondary hover:text-brand-accent border border-border-subtle flex-shrink-0 transition-colors hover:bg-bg-elevated"
           title="Open Menu"
           aria-label="Open menu"
         >
@@ -160,8 +135,8 @@ export const Header: React.FC = () => {
           onClick={toggleSidebar}
           className={`hidden md:flex items-center justify-center w-8 h-8 rounded-xl border transition-all flex-shrink-0 ${
             isSidebarCollapsed
-              ? "bg-brand-accent/15 text-brand-accent border-brand-accent/30 hover:bg-brand-accent/25 shadow-lime-sm"
-              : "bg-dark-900 text-text-secondary hover:text-brand-accent border-border-subtle hover:bg-dark-850"
+              ? "bg-brand-accent/15 text-brand-positive border-brand-accent/30 hover:bg-brand-accent/25 shadow-lime-sm"
+              : "bg-bg-secondary text-text-secondary hover:text-brand-accent border-border-subtle hover:bg-bg-elevated"
           }`}
           title={isSidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
           aria-label="Toggle sidebar"
@@ -186,7 +161,7 @@ export const Header: React.FC = () => {
               }}
               onFocus={() => setIsSearchOpen(true)}
               placeholder="Search 2,540+ NSE/BSE companies..."
-              className="w-full bg-dark-900 border border-border-subtle hover:border-brand-accent/40 rounded-full pl-9 pr-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all"
+              className="w-full bg-bg-secondary border border-border-subtle hover:border-brand-accent/40 rounded-full pl-9 pr-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-brand-accent focus:border-brand-accent transition-all shadow-sm"
             />
           </div>
 
@@ -197,8 +172,8 @@ export const Header: React.FC = () => {
                 className="fixed inset-0 z-10"
                 onClick={() => setIsSearchOpen(false)}
               />
-              <div className="absolute left-0 right-0 top-full mt-2 bg-dark-850 border border-border-subtle rounded-2xl shadow-2xl overflow-hidden z-20 py-2 divide-y divide-border-subtle/50">
-                <div className="px-3.5 py-1.5 text-[10px] font-bold text-text-muted uppercase tracking-wider bg-dark-900/60 flex items-center justify-between">
+              <div className="absolute left-0 right-0 top-full mt-2 bg-bg-card border border-border-subtle rounded-2xl shadow-2xl overflow-hidden z-20 py-2 divide-y divide-border-subtle/50">
+                <div className="px-3.5 py-1.5 text-[10px] font-bold text-text-muted uppercase tracking-wider bg-bg-secondary flex items-center justify-between">
                   <span>NSE Listed Equities</span>
                   <span>{searchResults.length} matches</span>
                 </div>
@@ -210,12 +185,12 @@ export const Header: React.FC = () => {
                       setIsSearchOpen(false);
                       setSearchQuery("");
                     }}
-                    className="flex items-center justify-between px-4 py-2.5 hover:bg-dark-800 cursor-pointer transition-colors"
+                    className="flex items-center justify-between px-4 py-2.5 hover:bg-bg-elevated cursor-pointer transition-colors"
                   >
                     <div className="flex-1 min-w-0 pr-3">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-text-primary">{stock.symbol}</span>
-                        <span className="text-[10px] text-text-muted px-1.5 py-0.5 rounded bg-dark-900 border border-border-subtle/60 font-mono">
+                        <span className="text-[10px] text-text-muted px-1.5 py-0.5 rounded bg-bg-secondary border border-border-subtle font-mono">
                           NSE:{stock.series || "EQ"}
                         </span>
                       </div>
@@ -247,8 +222,8 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Center: Signature Floating Pill Navigation Dock from Mockup */}
-      <nav className="hidden xl:flex items-center gap-1 bg-dark-900/90 border border-border-subtle p-1 rounded-full shadow-inner">
+      {/* Center: Signature Floating Pill Navigation Dock */}
+      <nav className="hidden xl:flex items-center gap-1 bg-bg-secondary border border-border-subtle p-1 rounded-full shadow-sm">
         {navPills.map(tab => {
           const isActive = activeTab === tab.id;
           return (
@@ -258,7 +233,7 @@ export const Header: React.FC = () => {
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                 isActive
                   ? "bg-brand-accent text-dark-950 shadow-md shadow-lime-400/25 scale-[1.02]"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+                  : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
               }`}
             >
               {tab.icon && <span>{tab.icon}</span>}
@@ -270,17 +245,17 @@ export const Header: React.FC = () => {
 
       {/* Right Controls: AI Assistant, Download Report, Live Status, CTAs */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* "Download Report" Pill Button from Mockup */}
+        {/* "Download Report" Pill Button */}
         <button
           onClick={handleDownloadReport}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-dark-900 hover:bg-dark-850 text-text-secondary hover:text-text-primary border border-border-subtle text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-secondary hover:bg-bg-elevated text-text-secondary hover:text-text-primary border border-border-subtle text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
           title="Download trade journal data as CSV"
         >
-          <Download className="w-3.5 h-3.5 text-zinc-400" />
+          <Download className="w-3.5 h-3.5 text-text-muted" />
           <span className="hidden lg:inline">Download Report</span>
         </button>
 
-        {/* "AI Assistant" Pill Button from Mockup */}
+        {/* "AI Assistant" Pill Button */}
         <button
           onClick={() => setActiveTab("tradepulse")}
           className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-accent hover:bg-brand-accentHover text-dark-950 font-black text-xs shadow-md shadow-lime-400/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -294,8 +269,8 @@ export const Header: React.FC = () => {
         <div
           className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-bold select-none ${
             isLiveConnected
-              ? "bg-emerald-950/40 text-brand-positive border-emerald-500/30"
-              : "bg-dark-900 text-text-muted border-border-subtle"
+              ? "bg-emerald-500/10 text-emerald-700 dark:text-brand-positive border-emerald-500/30"
+              : "bg-bg-secondary text-text-muted border-border-subtle"
           }`}
           title={lastLiveUpdate ? `Live prices synced with NSE at ${lastLiveUpdate}` : "Connecting to NSE..."}
         >
@@ -307,7 +282,7 @@ export const Header: React.FC = () => {
         <button
           onClick={handleManualRefresh}
           disabled={isRefreshing || isLoading}
-          className="p-2 rounded-full bg-dark-900 border border-border-subtle text-text-secondary hover:text-brand-accent hover:bg-dark-850 transition-colors disabled:opacity-50"
+          className="p-2 rounded-full bg-bg-secondary border border-border-subtle text-text-secondary hover:text-brand-accent hover:bg-bg-elevated transition-colors disabled:opacity-50 shadow-sm"
           title="Refresh live market quotes"
           aria-label="Refresh live quotes"
         >
@@ -317,8 +292,9 @@ export const Header: React.FC = () => {
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full bg-dark-900 border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-dark-850 transition-colors"
+          className="p-2 rounded-full bg-bg-secondary border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors shadow-sm"
           aria-label="Toggle theme"
+          title={theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
         >
           {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-brand-accent" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
         </button>
@@ -326,16 +302,16 @@ export const Header: React.FC = () => {
         {/* Log Trade CTA */}
         <button
           onClick={() => setIsNewTradeModalOpen(true)}
-          className="hidden sm:flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs font-bold transition-all active:scale-[0.98]"
+          className="hidden sm:flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-dark-950 hover:bg-dark-900 text-white dark:bg-white/10 dark:hover:bg-white/15 dark:text-white border border-transparent dark:border-white/20 text-xs font-bold transition-all active:scale-[0.98] shadow-sm"
         >
           <Plus className="w-3.5 h-3.5 text-brand-accent stroke-[3]" />
           <span>Log Trade</span>
         </button>
 
-        {/* User Profile Pill from Mockup */}
+        {/* User Profile Pill */}
         <div
           onClick={() => setActiveTab("settings")}
-          className="cursor-pointer hidden lg:flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-dark-900 border border-border-subtle hover:border-brand-accent/40 transition-colors"
+          className="cursor-pointer hidden lg:flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-bg-secondary border border-border-subtle hover:border-brand-accent/40 transition-colors shadow-sm"
           title="Trader Profile & Settings"
         >
           <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-accent to-emerald-400 text-dark-950 font-black text-[10px] flex items-center justify-center">
