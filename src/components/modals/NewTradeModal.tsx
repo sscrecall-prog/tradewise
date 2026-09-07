@@ -42,7 +42,14 @@ const POPULAR_INSTRUMENTS = [
 ];
 
 export const NewTradeModal: React.FC = () => {
-  const { isNewTradeModalOpen, setIsNewTradeModalOpen, addJournalEntry, preferences } = useApp();
+  const {
+    isNewTradeModalOpen,
+    setIsNewTradeModalOpen,
+    addJournalEntry,
+    preferences,
+    isTiltLocked,
+    setIsTiltLockModalOpen
+  } = useApp();
   const { quotes } = useMarketData();
 
   // Mode: Options vs Equity/Futures
@@ -65,6 +72,10 @@ export const NewTradeModal: React.FC = () => {
   const [exitPrice, setExitPrice] = useState("");
   const [stopLoss, setStopLoss] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
+
+  // MAE / MFE Excursions
+  const [maePrice, setMaePrice] = useState("");
+  const [mfePrice, setMfePrice] = useState("");
 
   // Timing
   const [tradeDate, setTradeDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -176,6 +187,11 @@ export const NewTradeModal: React.FC = () => {
     e.preventDefault();
     setErrorMessage("");
 
+    if (isTiltLocked) {
+      setIsTiltLockModalOpen(true);
+      return;
+    }
+
     const en = parseFloat(entryPrice);
     if (!en || en <= 0) {
       setErrorMessage("Please enter a valid entry price.");
@@ -196,6 +212,8 @@ export const NewTradeModal: React.FC = () => {
 
     const sl = parseFloat(stopLoss) || 0;
     const tg = parseFloat(targetPrice) || 0;
+    const maeP = maePrice ? parseFloat(maePrice) : undefined;
+    const mfeP = mfePrice ? parseFloat(mfePrice) : undefined;
 
     try {
       setIsSubmitting(true);
@@ -210,6 +228,8 @@ export const NewTradeModal: React.FC = () => {
         quantity: qty,
         stopLoss: sl,
         targetPrice: tg,
+        maePrice: maeP,
+        mfePrice: mfeP,
         grossPnL: calculations.grossPnL,
         estimatedCharges: calculations.charges.totalCharges,
         netPnL: calculations.netPnL,
@@ -230,6 +250,8 @@ export const NewTradeModal: React.FC = () => {
       setExitPrice("");
       setStopLoss("");
       setTargetPrice("");
+      setMaePrice("");
+      setMfePrice("");
       setNotes("");
       setChartUrl("");
     } catch (err) {
@@ -248,6 +270,22 @@ export const NewTradeModal: React.FC = () => {
       maxWidth="3xl"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        {isTiltLocked && (
+          <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Prop-Desk Tilt Lock active. Journaling and live execution are paused.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsTiltLockModalOpen(true)}
+              className="underline font-bold hover:text-white cursor-pointer"
+            >
+              View Timer &amp; Guide
+            </button>
+          </div>
+        )}
+
         {errorMessage && (
           <div className="p-3.5 rounded-xl bg-brand-negative/15 border border-brand-negative/30 text-brand-negative text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -541,6 +579,46 @@ export const NewTradeModal: React.FC = () => {
           </div>
         </div>
 
+        {/* Advanced: MAE / MFE Excursions (Optional) */}
+        {tradeStatus === "CLOSED" && (
+          <div className="p-3.5 rounded-2xl bg-bg-secondary/50 border border-border-subtle/80 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-text-secondary">
+                Optional: Excursion Pricing (MAE &amp; MFE)
+              </span>
+              <span className="text-[10px] text-text-muted">For Precision Analytics</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-medium text-text-secondary mb-1">
+                  MAE Price (Worst Drawdown Faced)
+                </label>
+                <input
+                  type="number"
+                  step="0.05"
+                  placeholder="e.g. 138.00"
+                  value={maePrice}
+                  onChange={e => setMaePrice(e.target.value)}
+                  className="w-full bg-bg-card border border-border-subtle rounded-xl px-3 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-text-secondary mb-1">
+                  MFE Price (Peak Profit Reached)
+                </label>
+                <input
+                  type="number"
+                  step="0.05"
+                  placeholder="e.g. 195.00"
+                  value={mfePrice}
+                  onChange={e => setMfePrice(e.target.value)}
+                  className="w-full bg-bg-card border border-border-subtle rounded-xl px-3 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Live Indian Regulatory Charges & Net P&L Summary Box */}
         {tradeStatus === "CLOSED" && parseFloat(entryPrice) > 0 && parseFloat(exitPrice) > 0 && (
           <div className="p-4 rounded-2xl bg-bg-elevated/70 border border-border-subtle space-y-3">
@@ -739,10 +817,10 @@ export const NewTradeModal: React.FC = () => {
           <Button
             type="submit"
             variant="primary"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isTiltLocked}
             icon={<Sparkles className="w-4 h-4" />}
           >
-            {isSubmitting ? "Saving..." : "Save to Journal"}
+            {isTiltLocked ? "Frozen by Tilt Lock" : isSubmitting ? "Saving..." : "Save to Journal"}
           </Button>
         </div>
       </form>

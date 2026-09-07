@@ -18,11 +18,18 @@ import {
   Tag,
   Clock,
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  Target,
+  AlertOctagon
 } from "lucide-react";
+import { TimeOfDayHeatmap } from "../components/analytics/TimeOfDayHeatmap";
+import { MfeMaeScatterChart } from "../components/analytics/MfeMaeScatterChart";
+import { CostOfIndisciplineCard } from "../components/analytics/CostOfIndisciplineCard";
 
 export const AnalyticsPage: React.FC = () => {
   const { journal, analytics, discipline } = useApp();
+
+  const [analyticsTab, setAnalyticsTab] = useState<"OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE">("OVERVIEW");
 
   // Calendar Heatmap month navigation
   const [calendarDate, setCalendarDate] = useState(() => new Date());
@@ -140,50 +147,122 @@ export const AnalyticsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Top Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Net Realized P&L"
-          value={
-            <span className={analytics.netPnL >= 0 ? "text-brand-positive" : "text-brand-negative"}>
-              {analytics.netPnL >= 0 ? "+₹" : "-₹"}
-              {Math.abs(analytics.netPnL).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </span>
-          }
-          subtitle={`Gross: ₹${analytics.grossPnL.toLocaleString("en-IN")}`}
-          icon={<TrendingUp className="w-4 h-4" />}
-        />
+      {/* Sub-Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => setAnalyticsTab("OVERVIEW")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            analyticsTab === "OVERVIEW"
+              ? "bg-brand-accent text-bg-primary shadow-sm"
+              : "bg-bg-secondary text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" />
+          <span>Institutional Overview</span>
+        </button>
 
-        <StatCard
-          title="Total Taxes & Brokerage"
-          value={
-            <span className="text-amber-400">
-              -₹{analytics.totalCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </span>
-          }
-          subtitle="STT + GST + Exchange + Stamp"
-          icon={<AlertTriangle className="w-4 h-4" />}
-        />
+        <button
+          onClick={() => setAnalyticsTab("TIME_OF_DAY")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            analyticsTab === "TIME_OF_DAY"
+              ? "bg-brand-accent text-bg-primary shadow-sm"
+              : "bg-bg-secondary text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" />
+          <span>Time-of-Day Edge Matrix</span>
+        </button>
 
-        <StatCard
-          title="Trade Expectancy"
-          value={`₹${analytics.expectancy}`}
-          subtitle={analytics.expectancy > 0 ? "Positive Math Edge / Trade" : "Negative Edge"}
-          trend={{
-            value: `${analytics.winRate}%`,
-            isPositive: analytics.winRate >= 50,
-            label: "Win Rate"
-          }}
-          icon={<BarChart2 className="w-4 h-4" />}
-        />
+        <button
+          onClick={() => setAnalyticsTab("MFE_MAE")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            analyticsTab === "MFE_MAE"
+              ? "bg-brand-accent text-bg-primary shadow-sm"
+              : "bg-bg-secondary text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
+          }`}
+        >
+          <Target className="w-3.5 h-3.5" />
+          <span>MAE / MFE Excursions</span>
+        </button>
 
-        <StatCard
-          title="Profit Factor"
-          value={analytics.profitFactor.toFixed(2)}
-          subtitle={`Avg Win ₹${analytics.averageWin} | Avg Loss ₹${analytics.averageLoss}`}
-          icon={<PieChart className="w-4 h-4" />}
-        />
+        <button
+          onClick={() => setAnalyticsTab("COST_INDISCIPLINE")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            analyticsTab === "COST_INDISCIPLINE"
+              ? "bg-brand-accent text-bg-primary shadow-sm"
+              : "bg-bg-secondary text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
+          }`}
+        >
+          <AlertOctagon className="w-3.5 h-3.5" />
+          <span>Cost of Indiscipline</span>
+        </button>
       </div>
+
+      {/* Tab: Time of Day Matrix */}
+      {analyticsTab === "TIME_OF_DAY" && (
+        <TimeOfDayHeatmap matrix={analytics.timeOfDayMatrix} />
+      )}
+
+      {/* Tab: MAE / MFE Excursion Analytics */}
+      {analyticsTab === "MFE_MAE" && (
+        <MfeMaeScatterChart data={analytics.mfeMaeAnalytics} />
+      )}
+
+      {/* Tab: Cost of Indiscipline */}
+      {analyticsTab === "COST_INDISCIPLINE" && (
+        <CostOfIndisciplineCard costData={analytics.costOfIndiscipline} />
+      )}
+
+      {/* Tab: Institutional Overview */}
+      {analyticsTab === "OVERVIEW" && (
+        <>
+          {/* Top Metrics Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Net Realized P&L"
+              value={
+                <span className={analytics.netPnL >= 0 ? "text-brand-positive" : "text-brand-negative"}>
+                  {analytics.netPnL >= 0 ? "+₹" : "-₹"}
+                  {Math.abs(analytics.netPnL).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              }
+              subtitle={`Gross: ₹${analytics.grossPnL.toLocaleString("en-IN")}`}
+              icon={<TrendingUp className="w-4 h-4" />}
+            />
+
+            <StatCard
+              title="Total Taxes & Brokerage"
+              value={
+                <span className="text-amber-400">
+                  -₹{analytics.totalCharges.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
+              }
+              subtitle="STT + GST + Exchange + Stamp"
+              icon={<AlertTriangle className="w-4 h-4" />}
+            />
+
+            <StatCard
+              title="Trade Expectancy"
+              value={`₹${analytics.expectancy}`}
+              subtitle={analytics.expectancy > 0 ? "Positive Math Edge / Trade" : "Negative Edge"}
+              trend={{
+                value: `${analytics.winRate}%`,
+                isPositive: analytics.winRate >= 50,
+                label: "Win Rate"
+              }}
+              icon={<BarChart2 className="w-4 h-4" />}
+            />
+
+            <StatCard
+              title="Profit Factor"
+              value={analytics.profitFactor.toFixed(2)}
+              subtitle={`Avg Win ₹${analytics.averageWin} | Avg Loss ₹${analytics.averageLoss}`}
+              icon={<PieChart className="w-4 h-4" />}
+            />
+          </div>
+
+          {/* Cost of Indiscipline Card Highlight */}
+          <CostOfIndisciplineCard costData={analytics.costOfIndiscipline} />
 
       {/* Interactive P&L Calendar Heatmap */}
       <div className="p-6 rounded-3xl bg-bg-card border border-border-subtle space-y-4">
@@ -549,6 +628,8 @@ export const AnalyticsPage: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Trade Detail Modal */}
       <TradeDetailModal

@@ -125,5 +125,152 @@ describe('TradingCalculationService', () => {
     expect(cncMargin).toBe(100000);
     expect(cncMargin / misMargin).toBe(5);
   });
+
+  it('provides the 4 canonical Indian market trading session windows', () => {
+    const sessions = TradingCalculationService.getIndianMarketSessions();
+    expect(sessions.length).toBe(4);
+    expect(sessions[0].id).toBe('OPENING_VOLATILITY');
+    expect(sessions[0].timeRange).toBe('09:15 - 10:00');
+    expect(sessions[1].id).toBe('MORNING_TREND');
+    expect(sessions[1].timeRange).toBe('10:00 - 11:30');
+    expect(sessions[2].id).toBe('LUNCH_CHOP');
+    expect(sessions[2].timeRange).toBe('11:30 - 13:30');
+    expect(sessions[3].id).toBe('CLOSING_GAMMA');
+    expect(sessions[3].timeRange).toBe('13:30 - 15:30');
+  });
+
+  it('calculates Time-of-Day 2D matrix, Golden Hour, and Red Flag Zone', () => {
+    const sampleTrades: any[] = [
+      // Mon 10:15 (Morning Trend) - Win +₹4,500
+      {
+        id: 't1',
+        date: '2026-09-07', // Monday
+        time: '10:15',
+        status: 'CLOSED',
+        direction: 'BUY',
+        entryPrice: 100,
+        exitPrice: 110,
+        quantity: 50,
+        stopLoss: 95,
+        targetPrice: 115,
+        netPnL: 4500,
+        grossPnL: 5000,
+        estimatedCharges: 500
+      },
+      // Wed 12:30 (Lunch Chop) - Loss -₹3,200
+      {
+        id: 't2',
+        date: '2026-09-09', // Wednesday
+        time: '12:30',
+        status: 'CLOSED',
+        direction: 'BUY',
+        entryPrice: 100,
+        exitPrice: 93,
+        quantity: 50,
+        stopLoss: 95,
+        targetPrice: 115,
+        netPnL: -3200,
+        grossPnL: -3500,
+        estimatedCharges: 300
+      }
+    ];
+
+    const matrix = TradingCalculationService.calculateTimeOfDayMatrix(sampleTrades);
+    expect(matrix.cells.length).toBe(20); // 5 days x 4 sessions
+
+    // Mon morning cell should have 1 trade, +₹4,500
+    const monMorning = matrix.cells.find(c => c.dayOfWeek === 1 && c.sessionId === 'MORNING_TREND');
+    expect(monMorning?.trades).toBe(1);
+    expect(monMorning?.netPnL).toBe(4500);
+    expect(monMorning?.winRate).toBe(100);
+
+    // Wed lunch cell should have 1 trade, -₹3,200
+    const wedLunch = matrix.cells.find(c => c.dayOfWeek === 3 && c.sessionId === 'LUNCH_CHOP');
+    expect(wedLunch?.trades).toBe(1);
+    expect(wedLunch?.netPnL).toBe(-3200);
+    expect(wedLunch?.winRate).toBe(0);
+
+    // Golden hour and red flag zone detection
+    expect(matrix.goldenHour?.session).toBe('Morning Trend');
+    expect(matrix.goldenHour?.netPnL).toBe(4500);
+    expect(matrix.redFlagZone?.session).toBe('Lunch Chop');
+    expect(matrix.redFlagZone?.netPnL).toBe(-3200);
+  });
+
+  it('calculates MAE and MFE excursion analytics and capture ratios', () => {
+    const sampleTrades: any[] = [
+      {
+        id: 't1',
+        date: '2026-09-08',
+        stockSymbol: 'RELIANCE',
+        direction: 'BUY',
+        status: 'CLOSED',
+        entryPrice: 2500,
+        exitPrice: 2600,
+        quantity: 10,
+        stopLoss: 2450,
+        targetPrice: 2650,
+        maePrice: 2480, // Drew down ₹20 (0.4R heat)
+        mfePrice: 2620, // Reached ₹2620 (+₹120 or 2.4R)
+        netPnL: 980,
+        rMultiple: 2.0
+      }
+    ];
+
+    const mfeMae = TradingCalculationService.calculateMfeMaeAnalytics(sampleTrades);
+    expect(mfeMae.tradesWithData).toBe(1);
+    expect(mfeMae.trades[0].maeR).toBe(0.4);
+    expect(mfeMae.trades[0].mfeR).toBe(2.4);
+    expect(mfeMae.trades[0].captureRatio).toBeGreaterThan(70);
+    expect(mfeMae.entryPrecisionScore).toBeGreaterThan(80);
+  });
+
+  it('calculates Cost of Indiscipline and distinguishes violation drains', () => {
+    const sampleTrades: any[] = [
+      // Trade 1: Moved Stop Loss (-₹3,000)
+      {
+        id: 't1',
+        status: 'CLOSED',
+        date: '2026-09-08',
+        direction: 'BUY',
+        entryPrice: 100,
+        exitPrice: 85,
+        quantity: 200,
+        stopLoss: 95, // Planned risk: 5 * 200 = ₹1,000
+        movedStopLoss: true,
+        planFollowed: false,
+        emotion: 'Neutral',
+        mistake: 'Ignored Stop Loss',
+        netPnL: -3000,
+        grossPnL: -3000,
+        estimatedCharges: 40
+      },
+      // Trade 2: FOMO Trade (-₹1,500)
+      {
+        id: 't2',
+        status: 'CLOSED',
+        date: '2026-09-08',
+        direction: 'BUY',
+        entryPrice: 500,
+        exitPrice: 485,
+        quantity: 100,
+        stopLoss: 490,
+        movedStopLoss: false,
+        planFollowed: false,
+        emotion: 'FOMO',
+        mistake: 'FOMO Entry',
+        netPnL: -1500,
+        grossPnL: -1500,
+        estimatedCharges: 30
+      }
+    ];
+
+    const costSummary = TradingCalculationService.calculateCostOfIndiscipline(sampleTrades);
+    expect(costSummary.totalCost).toBeGreaterThan(0);
+    expect(costSummary.movedStopLossCost).toBeGreaterThan(0);
+    expect(costSummary.fomoTradesCost).toBe(1500);
+    expect(costSummary.potentialNetPnL).toBeGreaterThan(costSummary.actualNetPnL);
+    expect(costSummary.violationCount).toBe(2);
+  });
 });
 

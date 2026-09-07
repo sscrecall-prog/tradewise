@@ -11,7 +11,8 @@ import {
   Flame,
   PanelLeftClose,
   PanelLeftOpen,
-  Menu
+  Menu,
+  Lock
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useMarketData } from "../../context/MarketDataContext";
@@ -36,7 +37,10 @@ export const Header: React.FC = () => {
     journal,
     isSidebarCollapsed,
     toggleSidebar,
-    toggleMobileSidebar
+    toggleMobileSidebar,
+    isTiltLocked,
+    tiltLockState,
+    setIsTiltLockModalOpen
   } = useApp();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -264,6 +268,20 @@ export const Header: React.FC = () => {
           <Sparkles className="w-3.5 h-3.5 fill-dark-950" />
           <span>AI Assistant</span>
         </button>
+
+        {/* Prop-Desk Tilt Lock Indicator */}
+        {isTiltLocked && (
+          <button
+            onClick={() => setIsTiltLockModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-400 text-xs font-black transition-all animate-pulse shadow-md shadow-rose-500/10 cursor-pointer"
+            title="Trading terminal locked for discipline cooldown. Click to view timer or pledge override."
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>
+              Tilt Lock ({Math.floor(tiltLockState.remainingSeconds / 60)}m {tiltLockState.remainingSeconds % 60}s)
+            </span>
+          </button>
+        )}
 
         {/* Live Market Connected Badge */}
         <div

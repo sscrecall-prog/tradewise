@@ -17,6 +17,7 @@ import { NewTradeModal } from "./components/modals/NewTradeModal";
 import { StockDetailModal } from "./components/modals/StockDetailModal";
 import { PlaceOrderModal } from "./components/modals/PlaceOrderModal";
 import { ContractNoteModal } from "./components/modals/ContractNoteModal";
+import { TiltLockModal } from "./components/modals/TiltLockModal";
 
 export const App: React.FC = () => {
   const {
@@ -68,6 +69,7 @@ export const App: React.FC = () => {
         isOpen={isContractNoteModalOpen}
         onClose={() => setIsContractNoteModalOpen(false)}
       />
+      <TiltLockModal />
     </AppLayout>
   );
 };

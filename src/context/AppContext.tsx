@@ -11,7 +11,8 @@ import {
   AppSettings,
   AcademyLesson,
   AnalyticsSummary,
-  DisciplineMetrics
+  DisciplineMetrics,
+  TiltLockState
 } from "../types";
 import { StorageService } from "../services/StorageService";
 import { DemoDataSeeder } from "../services/DemoDataSeeder";
@@ -24,6 +25,13 @@ interface AppContextType {
   removeFromWatchlist: (symbol: string) => Promise<void>;
   reorderWatchlist: (newWatchlist: string[]) => Promise<void>;
   isInWatchlist: (symbol: string) => boolean;
+
+  tiltLockState: TiltLockState;
+  isTiltLocked: boolean;
+  activateTiltLock: (reason?: 'MAX_DAILY_LOSS' | 'CONSECUTIVE_LOSSES' | 'MANUAL_COOLDOWN' | 'DRAWDOWN_CIRCUIT', durationMinutes?: number, description?: string) => void;
+  deactivateTiltLock: () => void;
+  isTiltLockModalOpen: boolean;
+  setIsTiltLockModalOpen: (open: boolean) => void;
 
   journal: JournalEntry[];
   addJournalEntry: (entry: Omit<JournalEntry, "id" | "createdAt">) => Promise<JournalEntry>;
@@ -120,6 +128,100 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedStockForOrder, setSelectedStockForOrder] = useState<string | null>(null);
   const [selectedContractNoteOrder, setSelectedContractNoteOrder] = useState<PaperOrder | null>(null);
   const [isContractNoteModalOpen, setIsContractNoteModalOpen] = useState(false);
+
+  // Pro Trader Suite: Prop-Desk Tilt Lock State
+  const [tiltLockState, setTiltLockState] = useState<TiltLockState>(() => {
+    try {
+      const saved = localStorage.getItem("tradewise_tilt_lock");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.isActive && parsed.lockedUntil) {
+          const rem = Math.max(0, Math.floor((new Date(parsed.lockedUntil).getTime() - Date.now()) / 1000));
+          if (rem > 0) {
+            return { ...parsed, remainingSeconds: rem };
+          }
+        }
+      }
+    } catch {}
+    return {
+      isActive: false,
+      reason: 'MANUAL_COOLDOWN',
+      reasonDescription: 'Trading active and discipline normal.',
+      lockedAt: '',
+      lockedUntil: '',
+      remainingSeconds: 0,
+      emergencyOverridesCount: 0
+    };
+  });
+
+  const [isTiltLockModalOpen, setIsTiltLockModalOpen] = useState(false);
+  const isTiltLocked = Boolean(tiltLockState.isActive && tiltLockState.remainingSeconds > 0);
+
+  const activateTiltLock = useCallback((
+    reason: 'MAX_DAILY_LOSS' | 'CONSECUTIVE_LOSSES' | 'MANUAL_COOLDOWN' | 'DRAWDOWN_CIRCUIT' = 'MANUAL_COOLDOWN',
+    durationMinutes: number = 30,
+    description?: string
+  ) => {
+    const now = new Date();
+    const until = new Date(now.getTime() + durationMinutes * 60 * 1000);
+    const desc = description || (
+      reason === 'MAX_DAILY_LOSS' ? 'Daily maximum loss limit reached. Trading paused to protect capital.' :
+      reason === 'CONSECUTIVE_LOSSES' ? '3 consecutive losses detected. Mandatory cooldown active.' :
+      reason === 'DRAWDOWN_CIRCUIT' ? 'Severe equity drawdown reached. Terminal lock engaged.' :
+      'Manual discipline cooldown activated. Take a breather.'
+    );
+    const newState: TiltLockState = {
+      isActive: true,
+      reason,
+      reasonDescription: desc,
+      lockedAt: now.toISOString(),
+      lockedUntil: until.toISOString(),
+      remainingSeconds: durationMinutes * 60,
+      emergencyOverridesCount: tiltLockState.emergencyOverridesCount || 0
+    };
+    setTiltLockState(newState);
+    try {
+      localStorage.setItem("tradewise_tilt_lock", JSON.stringify(newState));
+    } catch {}
+    setIsTiltLockModalOpen(true);
+  }, [tiltLockState.emergencyOverridesCount]);
+
+  const deactivateTiltLock = useCallback(() => {
+    setTiltLockState(prev => {
+      const updated: TiltLockState = {
+        ...prev,
+        isActive: false,
+        remainingSeconds: 0,
+        emergencyOverridesCount: (prev.emergencyOverridesCount || 0) + 1
+      };
+      try {
+        localStorage.setItem("tradewise_tilt_lock", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+    setIsTiltLockModalOpen(false);
+  }, []);
+
+  // Countdown timer for active tilt lock
+  useEffect(() => {
+    if (!tiltLockState.isActive) return;
+    const interval = setInterval(() => {
+      const rem = Math.max(0, Math.floor((new Date(tiltLockState.lockedUntil).getTime() - Date.now()) / 1000));
+      if (rem <= 0) {
+        setTiltLockState(prev => {
+          const updated = { ...prev, isActive: false, remainingSeconds: 0 };
+          try {
+            localStorage.setItem("tradewise_tilt_lock", JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+        clearInterval(interval);
+      } else {
+        setTiltLockState(prev => ({ ...prev, remainingSeconds: rem }));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [tiltLockState.isActive, tiltLockState.lockedUntil]);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
     try {
@@ -316,6 +418,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const placePaperOrder = async (orderData: Omit<PaperOrder, "id" | "timestamp" | "status">) => {
+    if (isTiltLocked) {
+      setIsTiltLockModalOpen(true);
+      return;
+    }
+
     const id = "ord-" + Date.now();
     const timestamp = new Date().toLocaleString("en-IN");
     const isIntraday = orderData.productType === "INTRADAY (MIS)";
@@ -591,6 +698,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, 0);
   const todayPnL = todayTrades.reduce((acc, t) => acc + t.netPnL, 0);
 
+  // Tilt Lock Automatic Circuit Breaker Watcher
+  useEffect(() => {
+    if (tiltLockState.isActive) return;
+
+    // 1. Max Daily Loss Hit
+    if (preferences.maxDailyLoss > 0 && todayPnL <= -Math.abs(preferences.maxDailyLoss)) {
+      activateTiltLock(
+        'MAX_DAILY_LOSS',
+        45,
+        `Daily loss limit reached (-₹${Math.abs(preferences.maxDailyLoss).toLocaleString('en-IN')}). Cooldown engaged to protect remaining capital.`
+      );
+      return;
+    }
+
+    // 2. 3 Consecutive Losses Today
+    const todayClosed = todayTrades.filter(t => t.status === 'CLOSED');
+    if (todayClosed.length >= 3) {
+      const last3 = todayClosed.slice(0, 3);
+      const allLosses = last3.every(t => t.netPnL < 0);
+      if (allLosses) {
+        activateTiltLock(
+          'CONSECUTIVE_LOSSES',
+          30,
+          '3 consecutive losses detected today. Prop-desk Tilt Lock engaged to prevent emotional revenge trading.'
+        );
+      }
+    }
+  }, [todayPnL, todayTrades, preferences.maxDailyLoss, tiltLockState.isActive, activateTiltLock]);
+
   const resetAllDemoData = async () => {
     await DemoDataSeeder.resetToDemoData();
     await initializeAppState();
@@ -627,6 +763,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removeFromWatchlist,
         reorderWatchlist,
         isInWatchlist,
+
+        tiltLockState,
+        isTiltLocked,
+        activateTiltLock,
+        deactivateTiltLock,
+        isTiltLockModalOpen,
+        setIsTiltLockModalOpen,
 
         journal,
         addJournalEntry,

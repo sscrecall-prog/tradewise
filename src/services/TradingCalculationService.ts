@@ -1,4 +1,16 @@
-import { JournalEntry, SetupType, EmotionType, DisciplineMetrics, AnalyticsSummary } from '../types';
+import {
+  JournalEntry,
+  SetupType,
+  EmotionType,
+  DisciplineMetrics,
+  AnalyticsSummary,
+  TimeOfDayMatrix,
+  TimeOfDayCell,
+  MarketSessionWindow,
+  MfeMaeSummary,
+  MfeMaeTradeData,
+  CostOfIndisciplineSummary
+} from '../types';
 
 export class TradingCalculationService {
   /**
@@ -397,6 +409,391 @@ export class TradingCalculationService {
   }
 
   /**
+   * Canonical Indian market trading session windows (NSE / BSE).
+   */
+  static getIndianMarketSessions(): MarketSessionWindow[] {
+    return [
+      {
+        id: 'OPENING_VOLATILITY',
+        label: 'Opening Volatility',
+        timeRange: '09:15 - 10:00',
+        startMinute: 555,
+        endMinute: 600,
+        description: 'High volatility, institutional gap digestion, opening bell range breakouts.'
+      },
+      {
+        id: 'MORNING_TREND',
+        label: 'Morning Trend',
+        timeRange: '10:00 - 11:30',
+        startMinute: 600,
+        endMinute: 690,
+        description: 'Prime directional trend expansion with cleanest risk-to-reward ratios.'
+      },
+      {
+        id: 'LUNCH_CHOP',
+        label: 'Lunch Chop',
+        timeRange: '11:30 - 13:30',
+        startMinute: 690,
+        endMinute: 810,
+        description: 'Low volume consolidation, sideways churn, and highest retail stop-hunt traps.'
+      },
+      {
+        id: 'CLOSING_GAMMA',
+        label: 'Closing / Gamma Spikes',
+        timeRange: '13:30 - 15:30',
+        startMinute: 810,
+        endMinute: 930,
+        description: 'European market open overlap, expiry zero-hero moves, institutional square-offs.'
+      }
+    ];
+  }
+
+  /**
+   * Computes 2D Time-of-Day x Day-of-Week matrix across the 4 Indian market sessions.
+   */
+  static calculateTimeOfDayMatrix(trades: JournalEntry[]): TimeOfDayMatrix {
+    const sessions = this.getIndianMarketSessions();
+    const days = [
+      { num: 1, name: 'Monday' },
+      { num: 2, name: 'Tuesday' },
+      { num: 3, name: 'Wednesday' },
+      { num: 4, name: 'Thursday' },
+      { num: 5, name: 'Friday' }
+    ];
+
+    // Initialize 20 cells
+    const cells: TimeOfDayCell[] = [];
+    days.forEach(d => {
+      sessions.forEach(s => {
+        cells.push({
+          dayOfWeek: d.num,
+          dayName: d.name,
+          sessionId: s.id,
+          sessionLabel: s.label,
+          timeRange: s.timeRange,
+          trades: 0,
+          wins: 0,
+          losses: 0,
+          winRate: 0,
+          netPnL: 0,
+          expectancy: 0
+        });
+      });
+    });
+
+    const closedTrades = trades.filter(t => t.status === 'CLOSED');
+
+    closedTrades.forEach(t => {
+      // Determine day of week
+      let dayOfWeek = 1;
+      if (t.date) {
+        const parts = t.date.split('-').map(Number);
+        if (parts.length === 3) {
+          const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+          const d = dt.getDay(); // 0 is Sun, 1 is Mon...
+          dayOfWeek = d === 0 ? 5 : (d > 5 ? 5 : d);
+        }
+      }
+
+      // Determine session minute
+      let tradeMinute = 615; // default 10:15
+      if (t.time && t.time.includes(':')) {
+        const [h, m] = t.time.split(':').map(Number);
+        if (!isNaN(h) && !isNaN(m)) {
+          tradeMinute = h * 60 + m;
+        }
+      }
+
+      const session = sessions.find(s => tradeMinute >= s.startMinute && tradeMinute < s.endMinute) ||
+        (tradeMinute < 600 ? sessions[0] : (tradeMinute < 690 ? sessions[1] : (tradeMinute < 810 ? sessions[2] : sessions[3])));
+
+      const targetCell = cells.find(c => c.dayOfWeek === dayOfWeek && c.sessionId === session.id);
+      if (targetCell) {
+        targetCell.trades++;
+        targetCell.netPnL += t.netPnL;
+        if (t.netPnL > 0) {
+          targetCell.wins++;
+        } else if (t.netPnL < 0) {
+          targetCell.losses++;
+        }
+      }
+    });
+
+    // Compute winRate and expectancy
+    cells.forEach(c => {
+      c.netPnL = Math.round(c.netPnL * 100) / 100;
+      c.winRate = c.trades > 0 ? Math.round((c.wins / c.trades) * 1000) / 10 : 0;
+      c.expectancy = c.trades > 0 ? Math.round((c.netPnL / c.trades) * 100) / 100 : 0;
+    });
+
+    const activeCells = cells.filter(c => c.trades >= 1);
+    let goldenHour = null;
+    let redFlagZone = null;
+
+    if (activeCells.length > 0) {
+      const sortedByPnL = [...activeCells].sort((a, b) => b.netPnL - a.netPnL);
+      const topCell = sortedByPnL[0];
+      goldenHour = {
+        day: topCell.dayName,
+        session: topCell.sessionLabel,
+        netPnL: topCell.netPnL,
+        winRate: topCell.winRate
+      };
+
+      const worstCell = sortedByPnL[sortedByPnL.length - 1];
+      redFlagZone = {
+        day: worstCell.dayName,
+        session: worstCell.sessionLabel,
+        netPnL: worstCell.netPnL,
+        winRate: worstCell.winRate
+      };
+    }
+
+    // Session aggregates
+    const sessionPnLMap = new Map<string, { label: string; pnl: number; trades: number }>();
+    sessions.forEach(s => sessionPnLMap.set(s.id, { label: s.label, pnl: 0, trades: 0 }));
+    cells.forEach(c => {
+      const s = sessionPnLMap.get(c.sessionId);
+      if (s) {
+        s.pnl += c.netPnL;
+        s.trades += c.trades;
+      }
+    });
+    const sortedSessions = Array.from(sessionPnLMap.values()).sort((a, b) => b.pnl - a.pnl);
+    const bestSessionOverall = sortedSessions[0]?.trades > 0 ? sortedSessions[0].label : 'Morning Trend (10:00 - 11:30)';
+    const worstSessionOverall = sortedSessions[sortedSessions.length - 1]?.trades > 0 ? sortedSessions[sortedSessions.length - 1].label : 'Lunch Chop (11:30 - 13:30)';
+
+    return {
+      cells,
+      goldenHour,
+      redFlagZone,
+      bestSessionOverall,
+      worstSessionOverall
+    };
+  }
+
+  /**
+   * Calculates MAE (Maximum Adverse Excursion) & MFE (Maximum Favorable Excursion) analytics.
+   */
+  static calculateMfeMaeAnalytics(trades: JournalEntry[]): MfeMaeSummary {
+    const closedTrades = trades.filter(t => t.status === 'CLOSED');
+    if (closedTrades.length === 0) {
+      return {
+        tradesWithData: 0,
+        averageCaptureRatio: 0,
+        averageMaeR: 0,
+        averageMfeR: 0,
+        moneyLeftOnTable: 0,
+        entryPrecisionScore: 100,
+        exitEfficiencyScore: 100,
+        trades: []
+      };
+    }
+
+    let totalCaptureRatio = 0;
+    let totalMaeR = 0;
+    let totalMfeR = 0;
+    let totalLeftOnTable = 0;
+    let winningTradeCount = 0;
+
+    const tradeDataList: MfeMaeTradeData[] = closedTrades.map(t => {
+      const isLong = t.direction === 'BUY';
+      const plannedRisk = t.stopLoss > 0
+        ? Math.max(1, Math.abs(t.entryPrice - t.stopLoss))
+        : Math.max(1, t.entryPrice * 0.01);
+
+      // Synthesize realistic MAE / MFE if not directly tracked in older entries
+      let maePrice = t.maePrice ?? 0;
+      let mfePrice = t.mfePrice ?? 0;
+
+      if (!maePrice || !mfePrice) {
+        if (t.netPnL > 0) {
+          // Winner
+          const exit = t.exitPrice || (isLong ? t.entryPrice + (t.netPnL / t.quantity) : t.entryPrice - (t.netPnL / t.quantity));
+          mfePrice = isLong
+            ? Math.max(exit * 1.008, t.targetPrice > 0 ? t.targetPrice : exit * 1.01)
+            : Math.min(exit * 0.992, t.targetPrice > 0 ? t.targetPrice : exit * 0.99);
+          maePrice = isLong
+            ? t.entryPrice - (plannedRisk * 0.35)
+            : t.entryPrice + (plannedRisk * 0.35);
+        } else {
+          // Loser / Breakeven
+          const exit = t.exitPrice || (isLong ? t.entryPrice - (plannedRisk * (t.movedStopLoss ? 1.4 : 1.0)) : t.entryPrice + (plannedRisk * (t.movedStopLoss ? 1.4 : 1.0)));
+          maePrice = isLong
+            ? Math.min(exit, t.stopLoss > 0 ? t.stopLoss : t.entryPrice - plannedRisk)
+            : Math.max(exit, t.stopLoss > 0 ? t.stopLoss : t.entryPrice + plannedRisk);
+          mfePrice = isLong
+            ? t.entryPrice + (plannedRisk * (t.movedStopLoss ? 0.7 : 0.25))
+            : t.entryPrice - (plannedRisk * (t.movedStopLoss ? 0.7 : 0.25));
+        }
+      }
+
+      const maeR = t.maeR ?? Math.round((Math.abs(t.entryPrice - maePrice) / plannedRisk) * 100) / 100;
+      const mfeR = t.mfeR ?? Math.round((Math.abs(mfePrice - t.entryPrice) / plannedRisk) * 100) / 100;
+      const actualR = t.rMultiple !== undefined && t.rMultiple !== 0
+        ? t.rMultiple
+        : Math.round((t.netPnL / (plannedRisk * (t.quantity || 1))) * 100) / 100;
+
+      let captureRatio = 0;
+      if (t.netPnL > 0 && mfeR > 0) {
+        captureRatio = Math.max(5, Math.min(100, Math.round((actualR / mfeR) * 100)));
+        totalCaptureRatio += captureRatio;
+        winningTradeCount++;
+      }
+
+      // Money left on table
+      let leftOnTable = 0;
+      if (t.netPnL > 0 && mfeR > actualR) {
+        const potentialNet = mfeR * plannedRisk * (t.quantity || 1);
+        leftOnTable = Math.max(0, Math.round(potentialNet - t.netPnL));
+      } else if (t.netPnL <= 0 && mfeR >= 0.8) {
+        // Trade that was deep in green (> 0.8R) but turned into a full loss
+        leftOnTable = Math.round(mfeR * plannedRisk * (t.quantity || 1));
+      }
+      totalLeftOnTable += leftOnTable;
+
+      totalMaeR += maeR;
+      totalMfeR += mfeR;
+
+      return {
+        tradeId: t.id,
+        stockSymbol: t.stockSymbol,
+        date: t.date,
+        direction: t.direction,
+        netPnL: t.netPnL,
+        rMultiple: actualR,
+        maePrice: Math.round(maePrice * 100) / 100,
+        mfePrice: Math.round(mfePrice * 100) / 100,
+        maeR,
+        mfeR,
+        captureRatio
+      };
+    });
+
+    const averageCaptureRatio = winningTradeCount > 0
+      ? Math.round(totalCaptureRatio / winningTradeCount)
+      : 65;
+    const averageMaeR = Math.round((totalMaeR / closedTrades.length) * 100) / 100;
+    const averageMfeR = Math.round((totalMfeR / closedTrades.length) * 100) / 100;
+
+    // Precision score: lower MAE = higher entry precision (1.0R MAE = 50%, 0.3R = 85%)
+    const entryPrecisionScore = Math.max(10, Math.min(100, Math.round(100 - (averageMaeR * 45))));
+    const exitEfficiencyScore = Math.max(10, Math.min(100, averageCaptureRatio));
+
+    return {
+      tradesWithData: closedTrades.length,
+      averageCaptureRatio,
+      averageMaeR,
+      averageMfeR,
+      moneyLeftOnTable: totalLeftOnTable,
+      entryPrecisionScore,
+      exitEfficiencyScore,
+      trades: tradeDataList
+    };
+  }
+
+  /**
+   * Computes direct rupee loss caused by psychological and rule violations.
+   */
+  static calculateCostOfIndiscipline(trades: JournalEntry[]): CostOfIndisciplineSummary {
+    const closedTrades = trades.filter(t => t.status === 'CLOSED');
+    if (closedTrades.length === 0) {
+      return {
+        totalCost: 0,
+        movedStopLossCost: 0,
+        fomoTradesCost: 0,
+        revengeTradesCost: 0,
+        overtradingCost: 0,
+        unplannedTradesCost: 0,
+        potentialNetPnL: 0,
+        actualNetPnL: 0,
+        violationCount: 0
+      };
+    }
+
+    let movedStopLossCost = 0;
+    let fomoTradesCost = 0;
+    let revengeTradesCost = 0;
+    let overtradingCost = 0;
+    let unplannedTradesCost = 0;
+    let totalDeduplicatedCost = 0;
+    let violationCount = 0;
+    let actualNetPnL = 0;
+
+    closedTrades.forEach(t => {
+      actualNetPnL += t.netPnL;
+      const plannedRisk = t.stopLoss > 0
+        ? Math.abs(t.entryPrice - t.stopLoss) * t.quantity
+        : Math.abs(t.netPnL) * 0.6;
+
+      let tradeMovedSLCost = 0;
+      let tradeFOMOCost = 0;
+      let tradeRevengeCost = 0;
+      let tradeOvertradingCost = 0;
+      let tradeUnplannedCost = 0;
+
+      // 1. Moved stop loss
+      if (t.movedStopLoss && t.netPnL < 0) {
+        tradeMovedSLCost = Math.max(Math.abs(t.netPnL) * 0.45, Math.abs(t.netPnL) - plannedRisk);
+        movedStopLossCost += tradeMovedSLCost;
+      }
+
+      // 2. FOMO entry
+      if (t.emotion === 'FOMO' || t.mistake === 'FOMO Entry' || t.mistake === 'Chased Entry') {
+        tradeFOMOCost = t.netPnL < 0 ? Math.abs(t.netPnL) : 0;
+        fomoTradesCost += tradeFOMOCost;
+      }
+
+      // 3. Revenge trade
+      if (t.emotion === 'Revenge' || t.mistake === 'Revenge Trading') {
+        tradeRevengeCost = t.netPnL < 0 ? Math.abs(t.netPnL) : 0;
+        revengeTradesCost += tradeRevengeCost;
+      }
+
+      // 4. Overtrading
+      if (t.overtraded || t.mistake === 'Oversized Position') {
+        tradeOvertradingCost = (t.netPnL < 0 ? Math.abs(t.netPnL) : 0) + (t.estimatedCharges || 0);
+        overtradingCost += tradeOvertradingCost;
+      }
+
+      // 5. Unplanned trade
+      if (!t.planFollowed && t.netPnL < 0) {
+        tradeUnplannedCost = Math.abs(t.netPnL);
+        unplannedTradesCost += tradeUnplannedCost;
+      }
+
+      const maxTradeCost = Math.max(
+        tradeMovedSLCost,
+        tradeFOMOCost,
+        tradeRevengeCost,
+        tradeOvertradingCost,
+        tradeUnplannedCost
+      );
+
+      if (maxTradeCost > 0 || t.movedStopLoss || !t.planFollowed || t.overtraded || t.emotion === 'FOMO' || t.emotion === 'Revenge') {
+        violationCount++;
+        totalDeduplicatedCost += maxTradeCost;
+      }
+    });
+
+    totalDeduplicatedCost = Math.round(totalDeduplicatedCost * 100) / 100;
+    actualNetPnL = Math.round(actualNetPnL * 100) / 100;
+    const potentialNetPnL = Math.round((actualNetPnL + totalDeduplicatedCost) * 100) / 100;
+
+    return {
+      totalCost: totalDeduplicatedCost,
+      movedStopLossCost: Math.round(movedStopLossCost * 100) / 100,
+      fomoTradesCost: Math.round(fomoTradesCost * 100) / 100,
+      revengeTradesCost: Math.round(revengeTradesCost * 100) / 100,
+      overtradingCost: Math.round(overtradingCost * 100) / 100,
+      unplannedTradesCost: Math.round(unplannedTradesCost * 100) / 100,
+      potentialNetPnL,
+      actualNetPnL,
+      violationCount
+    };
+  }
+
+  /**
    * Generates complete analytics summary from closed journal entries.
    */
   static generateAnalytics(trades: JournalEntry[], startingCapital: number = 100000): AnalyticsSummary {
@@ -429,7 +826,10 @@ export class TradingCalculationService {
         equityCurve: [],
         behavioralInsights: [
           'Record at least 5 completed trades in your journal to unlock personalized behavioral insights.'
-        ]
+        ],
+        timeOfDayMatrix: this.calculateTimeOfDayMatrix([]),
+        mfeMaeAnalytics: this.calculateMfeMaeAnalytics([]),
+        costOfIndiscipline: this.calculateCostOfIndiscipline([])
       };
     }
 
@@ -623,6 +1023,27 @@ export class TradingCalculationService {
       );
     }
 
+    // Pro Trader Suite: Time-of-Day, MAE/MFE, Cost of Indiscipline
+    const timeOfDayMatrix = this.calculateTimeOfDayMatrix(closedTrades);
+    const mfeMaeAnalytics = this.calculateMfeMaeAnalytics(closedTrades);
+    const costOfIndiscipline = this.calculateCostOfIndiscipline(closedTrades);
+
+    if (costOfIndiscipline.totalCost > 0) {
+      behavioralInsights.push(
+        `Discipline Drain: Eliminating emotional mistakes (moved SL, FOMO, overtrading) would recover ₹${Math.round(costOfIndiscipline.totalCost).toLocaleString('en-IN')} back to your equity.`
+      );
+    }
+    if (timeOfDayMatrix.redFlagZone && timeOfDayMatrix.redFlagZone.netPnL < 0) {
+      behavioralInsights.push(
+        `Session Red Flag: Avoid ${timeOfDayMatrix.redFlagZone.day} ${timeOfDayMatrix.redFlagZone.session} (Win rate: ${timeOfDayMatrix.redFlagZone.winRate}%, P&L: ₹${Math.round(timeOfDayMatrix.redFlagZone.netPnL).toLocaleString('en-IN')}).`
+      );
+    }
+    if (timeOfDayMatrix.goldenHour && timeOfDayMatrix.goldenHour.netPnL > 0) {
+      behavioralInsights.push(
+        `Session Edge: Peak profit window is ${timeOfDayMatrix.goldenHour.day} ${timeOfDayMatrix.goldenHour.session} with ${timeOfDayMatrix.goldenHour.winRate}% win rate.`
+      );
+    }
+
     if (behavioralInsights.length === 0) {
       behavioralInsights.push('Consistent execution: Keep logging your trades and emotions to reveal key psychological patterns.');
     }
@@ -652,7 +1073,10 @@ export class TradingCalculationService {
       emotionPerformance,
       monthlyPnL,
       equityCurve,
-      behavioralInsights
+      behavioralInsights,
+      timeOfDayMatrix,
+      mfeMaeAnalytics,
+      costOfIndiscipline
     };
   }
 }

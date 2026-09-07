@@ -118,6 +118,10 @@ export interface JournalEntry {
   notes: string;
   rMultiple: number;
   holdingTimeMinutes?: number;
+  maePrice?: number;
+  mfePrice?: number;
+  maeR?: number;
+  mfeR?: number;
   createdAt: string;
   closedAt?: string;
 }
@@ -281,4 +285,88 @@ export interface AnalyticsSummary {
   monthlyPnL: { month: string; pnl: number; trades: number }[];
   equityCurve: { date: string; cumulativePnL: number; drawdown: number }[];
   behavioralInsights: string[];
+  timeOfDayMatrix?: TimeOfDayMatrix;
+  mfeMaeAnalytics?: MfeMaeSummary;
+  costOfIndiscipline?: CostOfIndisciplineSummary;
 }
+
+export type MarketSessionId = 'OPENING_VOLATILITY' | 'MORNING_TREND' | 'LUNCH_CHOP' | 'CLOSING_GAMMA';
+
+export interface MarketSessionWindow {
+  id: MarketSessionId;
+  label: string;
+  timeRange: string;
+  startMinute: number;
+  endMinute: number;
+  description: string;
+}
+
+export interface TimeOfDayCell {
+  dayOfWeek: number; // 1 (Mon) to 5 (Fri)
+  dayName: string;
+  sessionId: MarketSessionId;
+  sessionLabel: string;
+  timeRange: string;
+  trades: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  netPnL: number;
+  expectancy: number;
+}
+
+export interface TimeOfDayMatrix {
+  cells: TimeOfDayCell[];
+  goldenHour: { day: string; session: string; netPnL: number; winRate: number } | null;
+  redFlagZone: { day: string; session: string; netPnL: number; winRate: number } | null;
+  bestSessionOverall: string;
+  worstSessionOverall: string;
+}
+
+export interface MfeMaeTradeData {
+  tradeId: string;
+  stockSymbol: string;
+  date: string;
+  direction: TradeDirection;
+  netPnL: number;
+  rMultiple: number;
+  maePrice: number;
+  mfePrice: number;
+  maeR: number;
+  mfeR: number;
+  captureRatio: number; // 0-100%
+}
+
+export interface MfeMaeSummary {
+  tradesWithData: number;
+  averageCaptureRatio: number;
+  averageMaeR: number;
+  averageMfeR: number;
+  moneyLeftOnTable: number;
+  entryPrecisionScore: number;
+  exitEfficiencyScore: number;
+  trades: MfeMaeTradeData[];
+}
+
+export interface CostOfIndisciplineSummary {
+  totalCost: number;
+  movedStopLossCost: number;
+  fomoTradesCost: number;
+  revengeTradesCost: number;
+  overtradingCost: number;
+  unplannedTradesCost: number;
+  potentialNetPnL: number;
+  actualNetPnL: number;
+  violationCount: number;
+}
+
+export interface TiltLockState {
+  isActive: boolean;
+  reason: 'MAX_DAILY_LOSS' | 'CONSECUTIVE_LOSSES' | 'MANUAL_COOLDOWN' | 'DRAWDOWN_CIRCUIT';
+  reasonDescription: string;
+  lockedAt: string;
+  lockedUntil: string;
+  remainingSeconds: number;
+  emergencyOverridesCount: number;
+}
+
