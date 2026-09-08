@@ -8,6 +8,7 @@ export interface IMarketDataProvider {
   getHistoricalData(symbol: string, timeframe: TimeFrame): Promise<HistoricalPrice[]>;
   searchStocks(query: string): Promise<MarketQuote[]>;
   searchAllIndianStocks(query: string): ListedCompany[];
+  getAllIndianStocks(): ListedCompany[];
   isMarketOpen(): { isOpen: boolean; status: string; nextEvent: string; timeUntilNext: string };
   isLiveConnected: boolean;
   lastLiveUpdated: string | null;
@@ -1202,6 +1203,13 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
 
     matches.sort((a, b) => b.score - a.score);
     return matches.slice(0, 40).map(m => m.item);
+  }
+
+  /**
+   * Return all 2,540+ indexed Indian listed companies
+   */
+  getAllIndianStocks(): ListedCompany[] {
+    return ALL_INDIAN_STOCKS;
   }
 
   /**

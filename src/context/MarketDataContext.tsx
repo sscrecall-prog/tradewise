@@ -21,6 +21,7 @@ interface MarketDataContextType {
   getHistoricalData: (symbol: string, timeframe: TimeFrame) => Promise<HistoricalPrice[]>;
   searchStocks: (query: string) => Promise<MarketQuote[]>;
   searchAllIndianStocks: (query: string) => ListedCompany[];
+  getAllIndianStocks: () => ListedCompany[];
   refreshData: () => Promise<void>;
   selectedStockSymbol: string | null;
   setSelectedStockSymbol: (symbol: string | null) => void;
@@ -138,6 +139,7 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         getHistoricalData,
         searchStocks,
         searchAllIndianStocks,
+        getAllIndianStocks: () => MarketDataService.getAllIndianStocks(),
         refreshData: loadData,
         selectedStockSymbol,
         setSelectedStockSymbol,

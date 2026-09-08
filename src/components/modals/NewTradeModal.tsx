@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
+import { StockCombobox } from "../common/StockCombobox";
 import { useApp } from "../../context/AppContext";
 import { useMarketData } from "../../context/MarketDataContext";
 import {
@@ -108,16 +109,29 @@ export const NewTradeModal: React.FC = () => {
   }, [lots, symbol, segment]);
 
   // Handle symbol change
-  const handleSymbolChange = (sym: string) => {
+  const handleSymbolChange = (sym: string, compName?: string, customLotSize?: number) => {
     setSymbol(sym);
-    const pop = POPULAR_INSTRUMENTS.find(p => p.symbol === sym);
-    if (pop) setInstrumentName(pop.name);
-    else {
-      const q = quotes.find(q => q.symbol === sym);
-      if (q) setInstrumentName(q.name);
+    if (compName) {
+      setInstrumentName(compName);
+    } else {
+      const pop = POPULAR_INSTRUMENTS.find(p => p.symbol === sym);
+      if (pop) setInstrumentName(pop.name);
+      else {
+        const q = quotes.find(q => q.symbol.toUpperCase() === sym.toUpperCase());
+        if (q) setInstrumentName(q.name);
+        else setInstrumentName(sym);
+      }
     }
-    if (INDEX_LOT_SIZES[sym]) {
-      setQuantity(lots * INDEX_LOT_SIZES[sym]);
+
+    const lotSize = customLotSize || INDEX_LOT_SIZES[sym];
+    if (lotSize) {
+      setQuantity(lots * lotSize);
+    }
+
+    // Auto-prefill entry price if empty or zero from quote
+    const liveQ = quotes.find(q => q.symbol.toUpperCase() === sym.toUpperCase());
+    if (liveQ && (!entryPrice || parseFloat(entryPrice) === 0)) {
+      setEntryPrice(liveQ.price.toFixed(2));
     }
   };
 
@@ -354,29 +368,15 @@ export const NewTradeModal: React.FC = () => {
         <div className="p-4 rounded-2xl bg-bg-elevated/50 border border-border-subtle space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Underlying Symbol</label>
-              <select
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-text-secondary">Underlying Symbol</label>
+                <span className="text-[10px] text-brand-positive font-bold">2,540+ Equities & Indices</span>
+              </div>
+              <StockCombobox
                 value={symbol}
-                onChange={e => handleSymbolChange(e.target.value)}
-                className="w-full bg-bg-secondary border border-border-subtle rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:ring-1 focus:ring-brand-accent"
-              >
-                <optgroup label="Indices (F&O)">
-                  <option value="NIFTY">NIFTY 50 (Lot: 25)</option>
-                  <option value="BANKNIFTY">BANK NIFTY (Lot: 15)</option>
-                  <option value="FINNIFTY">FINNIFTY (Lot: 25)</option>
-                  <option value="SENSEX">SENSEX (Lot: 10)</option>
-                </optgroup>
-                <optgroup label="Top NSE Equities">
-                  <option value="RELIANCE">RELIANCE</option>
-                  <option value="HDFCBANK">HDFC BANK</option>
-                  <option value="ICICIBANK">ICICI BANK</option>
-                  <option value="INFY">INFOSYS</option>
-                  <option value="TATAMOTORS">TATA MOTORS</option>
-                  <option value="SBIN">STATE BANK OF INDIA</option>
-                  <option value="TCS">TCS</option>
-                  <option value="LT">L&T</option>
-                </optgroup>
-              </select>
+                onChange={(newSym, compName, lotSize) => handleSymbolChange(newSym, compName, lotSize)}
+                segment={segment}
+              />
             </div>
 
             {/* Options Details */}
