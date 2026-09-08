@@ -4,6 +4,7 @@ import {
   PaperOrder,
   PaperPosition,
   PaperPortfolio,
+  ClosedPaperTrade,
   TradingPreferences,
   UserProfile,
   AppSettings,
@@ -11,7 +12,7 @@ import {
 } from '../types';
 
 const DB_NAME = 'tradewise_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export class StorageService {
   private static dbPromise: Promise<IDBDatabase> | null = null;
@@ -36,6 +37,7 @@ export class StorageService {
           'paperOrders',
           'paperPositions',
           'paperPortfolio',
+          'closedPaperTrades',
           'preferences',
           'profile',
           'settings',
@@ -170,6 +172,7 @@ export class StorageService {
       'paperOrders',
       'paperPositions',
       'paperPortfolio',
+      'closedPaperTrades',
       'preferences',
       'profile',
       'settings',

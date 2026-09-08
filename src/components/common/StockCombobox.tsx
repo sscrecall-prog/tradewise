@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useMarketData } from '../../context/MarketDataContext';
+import { useApp } from '../../context/AppContext';
+import { PaperTradeSyncService, PaperTradeSyncData } from '../../services/PaperTradeSyncService';
 import { ListedCompany } from '../../types';
-import { Search, ChevronDown, Check, Sparkles, TrendingUp, X } from 'lucide-react';
+import { Search, ChevronDown, Check, Sparkles, TrendingUp, X, Zap } from 'lucide-react';
 
 interface StockComboboxProps {
   value: string;
@@ -28,10 +30,29 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
   className = ''
 }) => {
   const { quotes, searchAllIndianStocks, fetchAndAddQuote } = useMarketData();
+  const { closedPaperTrades, paperPositions, paperOrders } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'ALL' | 'INDICES' | 'NIFTY50'>('ALL');
+  const [activeCategory, setActiveCategory] = useState<'ALL' | 'PAPER_TRADES' | 'INDICES' | 'NIFTY50'>('ALL');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  // Compute paper trades available for auto-fill
+  const todayPaperTrades = useMemo(() => {
+    return PaperTradeSyncService.getTodayPaperTrades({
+      closedPaperTrades,
+      paperPositions,
+      paperOrders,
+      liveQuotes: quotes
+    });
+  }, [closedPaperTrades, paperPositions, paperOrders, quotes]);
+
+  const paperTradeMap = useMemo(() => {
+    const map = new Map<string, PaperTradeSyncData>();
+    for (const pt of todayPaperTrades) {
+      map.set(pt.stockSymbol.toUpperCase(), pt);
+    }
+    return map;
+  }, [todayPaperTrades]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,16 +87,30 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
           name: idx.name,
           series: 'INDEX',
           isIndex: true,
-          lotSize: idx.lotSize
+          lotSize: idx.lotSize,
+          paperTrade: paperTradeMap.get(idx.symbol.toUpperCase())
         })),
         ...matchedStocks.map(stock => ({
           symbol: stock.symbol,
           name: stock.name,
           series: stock.series || 'EQ',
           isIndex: false,
-          lotSize: undefined
+          lotSize: undefined,
+          paperTrade: paperTradeMap.get(stock.symbol.toUpperCase())
         }))
       ].slice(0, 60);
+    }
+
+    // Filter by category: PAPER_TRADES
+    if (activeCategory === 'PAPER_TRADES') {
+      return todayPaperTrades.map(pt => ({
+        symbol: pt.stockSymbol,
+        name: pt.stockName,
+        series: pt.segment === 'EQUITY_CNC' ? 'CNC' : 'MIS',
+        isIndex: false,
+        lotSize: undefined,
+        paperTrade: pt
+      }));
     }
 
     // Default view when query is empty: filter by category
@@ -85,7 +120,8 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
         name: idx.name,
         series: 'INDEX',
         isIndex: true,
-        lotSize: idx.lotSize
+        lotSize: idx.lotSize,
+        paperTrade: paperTradeMap.get(idx.symbol.toUpperCase())
       }));
     }
 
@@ -96,17 +132,28 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
         name: q.name,
         series: 'EQ',
         isIndex: false,
-        lotSize: undefined
+        lotSize: undefined,
+        paperTrade: paperTradeMap.get(q.symbol.toUpperCase())
       }));
     }
 
-    // Default 'ALL': Show Indices on top, then prominent NIFTY 50, then master list
+    // Default 'ALL': Show Paper Trades on top, then Indices, then prominent NIFTY 50
+    const paperList = todayPaperTrades.map(pt => ({
+      symbol: pt.stockSymbol,
+      name: pt.stockName,
+      series: pt.segment === 'EQUITY_CNC' ? 'CNC' : 'MIS',
+      isIndex: false,
+      lotSize: undefined,
+      paperTrade: pt
+    }));
+
     const indicesList = INDEX_OPTIONS.map(idx => ({
       symbol: idx.symbol,
       name: idx.name,
       series: 'INDEX',
       isIndex: true,
-      lotSize: idx.lotSize
+      lotSize: idx.lotSize,
+      paperTrade: paperTradeMap.get(idx.symbol.toUpperCase())
     }));
 
     const stocksList = quotes.slice(0, 30).map(q => ({
@@ -114,11 +161,21 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
       name: q.name,
       series: 'EQ',
       isIndex: false,
-      lotSize: undefined
+      lotSize: undefined,
+      paperTrade: paperTradeMap.get(q.symbol.toUpperCase())
     }));
 
-    return [...indicesList, ...stocksList];
-  }, [searchQuery, activeCategory, quotes, searchAllIndianStocks]);
+    const seen = new Set<string>();
+    const combined: any[] = [];
+    for (const item of [...paperList, ...indicesList, ...stocksList]) {
+      if (!seen.has(item.symbol.toUpperCase())) {
+        combined.push(item);
+        seen.add(item.symbol.toUpperCase());
+      }
+    }
+
+    return combined;
+  }, [searchQuery, activeCategory, quotes, searchAllIndianStocks, todayPaperTrades, paperTradeMap]);
 
   const handleSelect = (sym: string, compName: string, lot?: number) => {
     onChange(sym, compName, lot);
@@ -232,6 +289,20 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
               >
                 All (2,540+)
               </button>
+              {todayPaperTrades.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('PAPER_TRADES')}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeCategory === 'PAPER_TRADES'
+                      ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40 font-black'
+                      : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
+                  }`}
+                >
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  Paper Traded ({todayPaperTrades.length})
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setActiveCategory('INDICES')}
@@ -262,7 +333,7 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
             <span>
               {searchQuery
                 ? `Showing results for "${searchQuery}"`
-                : `${activeCategory === 'INDICES' ? 'Indian Index Derivatives' : '2,540+ NSE & BSE Equities Available'}`}
+                : `${activeCategory === 'PAPER_TRADES' ? "Today's Executed & Open Paper Trades" : activeCategory === 'INDICES' ? 'Indian Index Derivatives' : '2,540+ NSE & BSE Equities Available'}`}
             </span>
             <span>{filteredItems.length} matches</span>
           </div>
@@ -288,7 +359,7 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
                   }`}
                 >
                   <div className="flex-1 min-w-0 pr-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-xs font-black ${isSelected ? 'text-brand-positive' : 'text-text-primary'}`}>
                         {item.symbol}
                       </span>
@@ -304,6 +375,12 @@ export const StockCombobox: React.FC<StockComboboxProps> = ({
                       {item.lotSize && (
                         <span className="text-[10px] text-text-muted font-semibold">
                           (Lot: {item.lotSize})
+                        </span>
+                      )}
+                      {item.paperTrade && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                          <Zap className="w-2.5 h-2.5 text-amber-400" />
+                          Traded: {item.paperTrade.quantity} Qty @ ₹{item.paperTrade.entryPrice}
                         </span>
                       )}
                     </div>

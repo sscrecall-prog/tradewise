@@ -6,6 +6,7 @@ import {
   PaperOrder,
   PaperPosition,
   PaperPortfolio,
+  ClosedPaperTrade,
   TradingPreferences,
   UserProfile,
   AppSettings,
@@ -45,6 +46,7 @@ interface AppContextType {
   paperPortfolio: PaperPortfolio;
   paperPositions: PaperPosition[];
   paperOrders: PaperOrder[];
+  closedPaperTrades: ClosedPaperTrade[];
   placePaperOrder: (order: Omit<PaperOrder, "id" | "timestamp" | "status">) => Promise<void>;
   closePaperPosition: (positionId: string, exitPrice?: number) => Promise<void>;
   resetPaperTrading: () => Promise<void>;
@@ -85,6 +87,9 @@ interface AppContextType {
 
   isNewTradeModalOpen: boolean;
   setIsNewTradeModalOpen: (open: boolean) => void;
+  initialTradePrefill: (Partial<JournalEntry> & { holdingMinutes?: number; isFromPaperTrade?: boolean }) | null;
+  openNewTradeModalWithPrefill: (prefill: Partial<JournalEntry> & { holdingMinutes?: number; isFromPaperTrade?: boolean }) => void;
+  clearTradePrefill: () => void;
   isChecklistModalOpen: boolean;
   setIsChecklistModalOpen: (open: boolean) => void;
   activePlanForChecklist: Partial<TradePlan> | null;
@@ -118,6 +123,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [paperPortfolio, setPaperPortfolio] = useState<PaperPortfolio>(DemoDataSeeder.getInitialPaperPortfolio());
   const [paperPositions, setPaperPositions] = useState<PaperPosition[]>([]);
   const [paperOrders, setPaperOrders] = useState<PaperOrder[]>([]);
+  const [closedPaperTrades, setClosedPaperTrades] = useState<ClosedPaperTrade[]>([]);
   const [academyLessons, setAcademyLessons] = useState<AcademyLesson[]>([]);
   const [preferences, setPreferences] = useState<TradingPreferences>(DemoDataSeeder.getInitialPreferences());
   const [profile, setProfile] = useState<UserProfile>(DemoDataSeeder.getInitialProfile());
@@ -132,6 +138,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [isNewTradeModalOpen, setIsNewTradeModalOpen] = useState(false);
+  const [initialTradePrefill, setInitialTradePrefill] = useState<(Partial<JournalEntry> & { holdingMinutes?: number; isFromPaperTrade?: boolean }) | null>(null);
+
+  const openNewTradeModalWithPrefill = (prefill: Partial<JournalEntry> & { holdingMinutes?: number; isFromPaperTrade?: boolean }) => {
+    setInitialTradePrefill(prefill);
+    setIsNewTradeModalOpen(true);
+  };
+
+  const clearTradePrefill = () => {
+    setInitialTradePrefill(null);
+  };
+
   const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
   const [activePlanForChecklist, setActivePlanForChecklist] = useState<Partial<TradePlan> | null>(null);
   const [isPlaceOrderModalOpen, setIsPlaceOrderModalOpen] = useState(false);
@@ -287,6 +304,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         portfolioItems,
         positionItems,
         orderItems,
+        closedPaperItems,
         lessonItems,
         prefItems,
         profileItems,
@@ -298,6 +316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         StorageService.getAll<PaperPortfolio & { id: string }>("paperPortfolio"),
         StorageService.getAll<PaperPosition>("paperPositions"),
         StorageService.getAll<PaperOrder>("paperOrders"),
+        StorageService.getAll<ClosedPaperTrade>("closedPaperTrades"),
         StorageService.getAll<AcademyLesson>("academy"),
         StorageService.getAll<TradingPreferences & { id: string }>("preferences"),
         StorageService.getAll<UserProfile & { id: string }>("profile"),
@@ -314,6 +333,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (portfolioItems.length > 0) setPaperPortfolio(portfolioItems[0]);
       setPaperPositions(positionItems);
       setPaperOrders(orderItems);
+      if (closedPaperItems.length > 0) {
+        setClosedPaperTrades(closedPaperItems);
+      } else {
+        const initClosed = DemoDataSeeder.getInitialClosedPaperTrades();
+        setClosedPaperTrades(initClosed);
+        await StorageService.saveAll("closedPaperTrades", initClosed);
+      }
       if (lessonItems.length > 0) setAcademyLessons(lessonItems);
       if (prefItems.length > 0) setPreferences(prefItems[0]);
       if (profileItems.length > 0) setProfile(profileItems[0]);
@@ -585,6 +611,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio });
 
     const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
+
+    const openedTime = new Date(pos.openedAt).getTime();
+    const holdingMins = !isNaN(openedTime)
+      ? Math.max(1, Math.round((Date.now() - openedTime) / 60000))
+      : 15;
+
+    const isBuy = pos.direction === "BUY";
+    const maePrice = isBuy
+      ? Math.round(Math.min(pos.avgPrice, pos.stopLoss || pos.avgPrice * 0.985) * 100) / 100
+      : Math.round(Math.max(pos.avgPrice, pos.stopLoss || pos.avgPrice * 1.015) * 100) / 100;
+    const mfePrice = isBuy
+      ? Math.round(Math.max(finalPrice, pos.targetPrice || pos.avgPrice * 1.025) * 100) / 100
+      : Math.round(Math.min(finalPrice, pos.targetPrice || pos.avgPrice * 0.975) * 100) / 100;
+
+    const closedTrade: ClosedPaperTrade = {
+      id: "cpt-" + Date.now(),
+      stockSymbol: pos.stockSymbol,
+      stockName: pos.stockName,
+      direction: pos.direction,
+      productType: pos.productType,
+      quantity: pos.quantity,
+      entryPrice: pos.avgPrice,
+      exitPrice: finalPrice,
+      stopLoss: pos.stopLoss,
+      targetPrice: pos.targetPrice,
+      openedAt: pos.openedAt,
+      closedAt: new Date().toISOString(),
+      holdingMinutes: holdingMins,
+      grossPnL,
+      netPnL,
+      charges: totalTradeCharges,
+      maePrice,
+      mfePrice,
+      contractNoteId
+    };
+
+    const newClosedPaperTrades = [closedTrade, ...closedPaperTrades];
+    setClosedPaperTrades(newClosedPaperTrades);
+    await StorageService.save("closedPaperTrades", closedTrade);
+
     const closeOrder: PaperOrder = {
       id: "ord-" + Date.now(),
       stockSymbol: pos.stockSymbol,
@@ -659,9 +725,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPaperPortfolio(initial);
     setPaperPositions([]);
     setPaperOrders([]);
+    setClosedPaperTrades([]);
     await StorageService.save("paperPortfolio", { id: "portfolio_main", ...initial });
     await StorageService.clearStore("paperPositions");
     await StorageService.clearStore("paperOrders");
+    await StorageService.clearStore("closedPaperTrades");
   };
 
   const completeAcademyLesson = async (lessonId: string, quizScore: number = 100) => {
@@ -793,6 +861,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         paperPortfolio,
         paperPositions,
         paperOrders,
+        closedPaperTrades,
         placePaperOrder,
         closePaperPosition,
         resetPaperTrading,
@@ -833,6 +902,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         isNewTradeModalOpen,
         setIsNewTradeModalOpen,
+        initialTradePrefill,
+        openNewTradeModalWithPrefill,
+        clearTradePrefill,
         isChecklistModalOpen,
         setIsChecklistModalOpen,
         activePlanForChecklist,

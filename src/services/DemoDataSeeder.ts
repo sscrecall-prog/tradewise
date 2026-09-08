@@ -3,6 +3,7 @@ import {
   PaperOrder,
   PaperPosition,
   PaperPortfolio,
+  ClosedPaperTrade,
   TradingPreferences,
   UserProfile,
   AppSettings,
@@ -694,6 +695,75 @@ export class DemoDataSeeder {
     ];
   }
 
+  static getInitialClosedPaperTrades(): ClosedPaperTrade[] {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return [
+      {
+        id: 'closed-paper-1',
+        stockSymbol: 'HINDALCO',
+        stockName: 'Hindalco Industries Limited',
+        direction: 'BUY',
+        productType: 'INTRADAY (MIS)',
+        quantity: 250,
+        entryPrice: 145.50,
+        exitPrice: 182.00,
+        stopLoss: 125.00,
+        targetPrice: 190.00,
+        openedAt: `${todayStr}T09:45:00Z`,
+        closedAt: `${todayStr}T10:02:00Z`,
+        holdingMinutes: 17,
+        grossPnL: 9125,
+        netPnL: 9082.50,
+        charges: 42.50,
+        maePrice: 138.00,
+        mfePrice: 195.00,
+        contractNoteId: 'CN-749201'
+      },
+      {
+        id: 'closed-paper-2',
+        stockSymbol: 'RELIANCE',
+        stockName: 'Reliance Industries Ltd.',
+        direction: 'BUY',
+        productType: 'INTRADAY (MIS)',
+        quantity: 20,
+        entryPrice: 2950.00,
+        exitPrice: 2982.00,
+        stopLoss: 2930.00,
+        targetPrice: 3000.00,
+        openedAt: `${todayStr}T10:15:00Z`,
+        closedAt: `${todayStr}T10:47:00Z`,
+        holdingMinutes: 32,
+        grossPnL: 640.00,
+        netPnL: 616.40,
+        charges: 23.60,
+        maePrice: 2942.00,
+        mfePrice: 2988.00,
+        contractNoteId: 'CN-749202'
+      },
+      {
+        id: 'closed-paper-3',
+        stockSymbol: 'TATAMOTORS',
+        stockName: 'Tata Motors Ltd.',
+        direction: 'BUY',
+        productType: 'INTRADAY (MIS)',
+        quantity: 50,
+        entryPrice: 1005.00,
+        exitPrice: 1028.50,
+        stopLoss: 990.00,
+        targetPrice: 1035.00,
+        openedAt: `${todayStr}T11:00:00Z`,
+        closedAt: `${todayStr}T11:24:00Z`,
+        holdingMinutes: 24,
+        grossPnL: 1175.00,
+        netPnL: 1146.20,
+        charges: 28.80,
+        maePrice: 998.00,
+        mfePrice: 1032.00,
+        contractNoteId: 'CN-749203'
+      }
+    ];
+  }
+
   static getInitialPaperOrders(): PaperOrder[] {
     return [
       {
@@ -1162,6 +1232,11 @@ export class DemoDataSeeder {
       await StorageService.saveAll('paperOrders', this.getInitialPaperOrders());
     }
 
+    const existingClosedPaper = await StorageService.getAll('closedPaperTrades');
+    if (existingClosedPaper.length === 0) {
+      await StorageService.saveAll('closedPaperTrades', this.getInitialClosedPaperTrades());
+    }
+
     const existingAcademy = await StorageService.getAll('academy');
     if (existingAcademy.length === 0) {
       await StorageService.saveAll('academy', this.getInitialAcademyLessons());
@@ -1177,7 +1252,8 @@ export class DemoDataSeeder {
       'journal',
       'tradePlans',
       'paperOrders',
-      'paperPositions'
+      'paperPositions',
+      'closedPaperTrades'
     ];
     for (const store of storesToClear) {
       await StorageService.clearStore(store);
@@ -1223,6 +1299,7 @@ export class DemoDataSeeder {
       'paperOrders',
       'paperPositions',
       'paperPortfolio',
+      'closedPaperTrades',
       'preferences',
       'profile',
       'settings',

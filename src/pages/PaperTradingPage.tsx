@@ -23,7 +23,8 @@ import {
   Search,
   AlertTriangle,
   Info,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 
 export const PaperTradingPage: React.FC = () => {
@@ -40,7 +41,8 @@ export const PaperTradingPage: React.FC = () => {
     setSelectedContractNoteOrder,
     setIsContractNoteModalOpen,
     setIsPlaceOrderModalOpen,
-    setSelectedStockForOrder
+    setSelectedStockForOrder,
+    openNewTradeModalWithPrefill
   } = useApp();
 
   const { quotes, openStockModal } = useMarketData();
@@ -605,6 +607,31 @@ export const PaperTradingPage: React.FC = () => {
                               </Button>
 
                               <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  openNewTradeModalWithPrefill({
+                                    stockSymbol: pos.stockSymbol,
+                                    stockName: pos.stockName,
+                                    direction: pos.direction,
+                                    quantity: pos.quantity,
+                                    entryPrice: pos.avgPrice,
+                                    exitPrice: pos.currentPrice,
+                                    stopLoss: pos.stopLoss,
+                                    targetPrice: pos.targetPrice,
+                                    holdingMinutes: Math.max(1, Math.round((Date.now() - new Date(pos.openedAt).getTime()) / 60000)),
+                                    status: 'CLOSED',
+                                    isFromPaperTrade: true
+                                  });
+                                }}
+                                title="Log this trade directly to TradeWise Journal"
+                                className="text-amber-400 hover:text-amber-300 border-amber-500/30 hover:bg-amber-500/10 flex items-center gap-1"
+                              >
+                                <BookOpen className="w-3 h-3" />
+                                Journal
+                              </Button>
+
+                              <Button
                                 variant="danger"
                                 size="sm"
                                 disabled={closingId === pos.id}
@@ -921,15 +948,39 @@ export const PaperTradingPage: React.FC = () => {
                                 Cancel
                               </Button>
                             ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                icon={<FileText className="w-3.5 h-3.5 text-brand-accent" />}
-                                onClick={() => handleOpenContractNote(ord)}
-                                className="text-brand-accent hover:bg-brand-accent/10"
-                              >
-                                Tax Invoice
-                              </Button>
+                              <div className="inline-flex items-center gap-1.5 justify-end">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  icon={<BookOpen className="w-3.5 h-3.5 text-amber-400" />}
+                                  onClick={() => {
+                                    openNewTradeModalWithPrefill({
+                                      stockSymbol: ord.stockSymbol,
+                                      stockName: ord.stockName,
+                                      direction: ord.direction,
+                                      quantity: ord.quantity,
+                                      entryPrice: ord.executedPrice || ord.price,
+                                      stopLoss: ord.stopLoss,
+                                      targetPrice: ord.targetPrice,
+                                      status: 'CLOSED',
+                                      isFromPaperTrade: true
+                                    });
+                                  }}
+                                  className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                                  title="Log to Trade Journal"
+                                >
+                                  Journal
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  icon={<FileText className="w-3.5 h-3.5 text-brand-accent" />}
+                                  onClick={() => handleOpenContractNote(ord)}
+                                  className="text-brand-accent hover:bg-brand-accent/10"
+                                >
+                                  Tax Invoice
+                                </Button>
+                              </div>
                             )}
                           </td>
                         </tr>

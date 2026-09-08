@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Modal } from "../common/Modal";
 import { Button } from "../common/Button";
 import { StockCombobox } from "../common/StockCombobox";
@@ -12,12 +12,15 @@ import {
   MistakeType
 } from "../../types";
 import { TradingCalculationService } from "../../services/TradingCalculationService";
+import { PaperTradeSyncService, PaperTradeSyncData } from "../../services/PaperTradeSyncService";
 import {
   TrendingUp,
   TrendingDown,
   Calculator,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  RotateCcw
 } from "lucide-react";
 
 const INDEX_LOT_SIZES: Record<string, number> = {
@@ -50,9 +53,27 @@ export const NewTradeModal: React.FC = () => {
     preferences,
     isTiltLocked,
     setIsTiltLockModalOpen,
-    setActiveTab
+    setActiveTab,
+    closedPaperTrades,
+    paperPositions,
+    paperOrders,
+    initialTradePrefill,
+    clearTradePrefill
   } = useApp();
   const { quotes } = useMarketData();
+
+  // Paper Trading Auto-Fill Sync State
+  const [autoFilledTrade, setAutoFilledTrade] = useState<PaperTradeSyncData | null>(null);
+
+  // Compute all available paper trades today
+  const todayPaperTrades = useMemo(() => {
+    return PaperTradeSyncService.getTodayPaperTrades({
+      closedPaperTrades,
+      paperPositions,
+      paperOrders,
+      liveQuotes: quotes
+    });
+  }, [closedPaperTrades, paperPositions, paperOrders, quotes]);
 
   // Mode: Options vs Equity/Futures
   const [segment, setSegment] = useState<"OPTIONS" | "EQUITY_MIS" | "EQUITY_CNC" | "FUTURES">("OPTIONS");
@@ -100,6 +121,105 @@ export const NewTradeModal: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Apply paper trade data across all modal fields
+  const applyPaperTrade = useCallback((pt: PaperTradeSyncData) => {
+    setSymbol(pt.stockSymbol);
+    setInstrumentName(pt.stockName);
+    setSegment(pt.segment);
+    setDirection(pt.direction);
+    setQuantity(pt.quantity);
+    setEntryPrice(pt.entryPrice.toFixed(2));
+    setExitPrice(pt.exitPrice !== undefined ? pt.exitPrice.toFixed(2) : "");
+    setStopLoss(pt.stopLoss !== undefined ? pt.stopLoss.toFixed(2) : "");
+    setTargetPrice(pt.targetPrice !== undefined ? pt.targetPrice.toFixed(2) : "");
+    setHoldingMinutes(pt.holdingMinutes || 15);
+    setTradeStatus(pt.tradeStatus || "CLOSED");
+    setTradeDate(pt.tradeDate);
+    setTradeTime(pt.tradeTime);
+    if (pt.maePrice !== undefined) setMaePrice(pt.maePrice.toFixed(2));
+    if (pt.mfePrice !== undefined) setMfePrice(pt.mfePrice.toFixed(2));
+    setAutoFilledTrade(pt);
+  }, []);
+
+  const handleClearAutoFill = () => {
+    setAutoFilledTrade(null);
+    setEntryPrice("");
+    setExitPrice("");
+    setStopLoss("");
+    setTargetPrice("");
+    setMaePrice("");
+    setMfePrice("");
+  };
+
+  // Check if opened with pre-filled paper trade data
+  useEffect(() => {
+    if (initialTradePrefill && isNewTradeModalOpen) {
+      if (initialTradePrefill.stockSymbol) {
+        setSymbol(initialTradePrefill.stockSymbol);
+      }
+      if (initialTradePrefill.stockName) {
+        setInstrumentName(initialTradePrefill.stockName);
+      }
+      if (initialTradePrefill.direction) {
+        setDirection(initialTradePrefill.direction);
+      }
+      if (initialTradePrefill.quantity) {
+        setQuantity(initialTradePrefill.quantity);
+      }
+      if (initialTradePrefill.entryPrice !== undefined) {
+        setEntryPrice(initialTradePrefill.entryPrice.toString());
+      }
+      if (initialTradePrefill.exitPrice !== undefined) {
+        setExitPrice(initialTradePrefill.exitPrice.toString());
+      }
+      if (initialTradePrefill.stopLoss !== undefined) {
+        setStopLoss(initialTradePrefill.stopLoss.toString());
+      }
+      if (initialTradePrefill.targetPrice !== undefined) {
+        setTargetPrice(initialTradePrefill.targetPrice.toString());
+      }
+      if (initialTradePrefill.holdingMinutes !== undefined) {
+        setHoldingMinutes(initialTradePrefill.holdingMinutes);
+      }
+      if (initialTradePrefill.status) {
+        setTradeStatus(initialTradePrefill.status);
+      }
+      if (initialTradePrefill.maePrice !== undefined) {
+        setMaePrice(initialTradePrefill.maePrice.toString());
+      }
+      if (initialTradePrefill.mfePrice !== undefined) {
+        setMfePrice(initialTradePrefill.mfePrice.toString());
+      }
+      if (initialTradePrefill.date) {
+        setTradeDate(initialTradePrefill.date);
+      }
+      if (initialTradePrefill.time) {
+        setTradeTime(initialTradePrefill.time);
+      }
+      if (initialTradePrefill.isFromPaperTrade) {
+        setAutoFilledTrade({
+          id: 'prefill-' + Date.now(),
+          source: 'CLOSED_POSITION',
+          sourceLabel: 'Paper Terminal Export',
+          stockSymbol: initialTradePrefill.stockSymbol || symbol,
+          stockName: initialTradePrefill.stockName || instrumentName,
+          direction: initialTradePrefill.direction || direction,
+          segment: segment,
+          quantity: initialTradePrefill.quantity || quantity,
+          entryPrice: initialTradePrefill.entryPrice || 0,
+          exitPrice: initialTradePrefill.exitPrice,
+          stopLoss: initialTradePrefill.stopLoss,
+          targetPrice: initialTradePrefill.targetPrice,
+          holdingMinutes: initialTradePrefill.holdingMinutes || 15,
+          tradeStatus: initialTradePrefill.status || 'CLOSED',
+          tradeDate: initialTradePrefill.date || tradeDate,
+          tradeTime: initialTradePrefill.time || tradeTime
+        });
+      }
+      clearTradePrefill();
+    }
+  }, [initialTradePrefill, isNewTradeModalOpen, clearTradePrefill, symbol, instrumentName, direction, segment, quantity, tradeDate, tradeTime]);
+
   // Update quantity whenever lots or symbol changes in options mode
   useEffect(() => {
     if (segment === "OPTIONS" && INDEX_LOT_SIZES[symbol]) {
@@ -127,6 +247,22 @@ export const NewTradeModal: React.FC = () => {
     if (lotSize) {
       setQuantity(lots * lotSize);
     }
+
+    // SMART AUTO-FILL: Check if there is paper trading execution data for this stock
+    const matchedPaperTrade = PaperTradeSyncService.getLatestPaperTradeForSymbol(sym, {
+      closedPaperTrades,
+      paperPositions,
+      paperOrders,
+      liveQuotes: quotes
+    });
+
+    if (matchedPaperTrade) {
+      applyPaperTrade(matchedPaperTrade);
+      return;
+    }
+
+    // If no paper trade found, reset auto-filled status
+    setAutoFilledTrade(null);
 
     // Auto-prefill entry price if empty or zero from quote
     const liveQ = quotes.find(q => q.symbol.toUpperCase() === sym.toUpperCase());
@@ -305,6 +441,52 @@ export const NewTradeModal: React.FC = () => {
           <div className="p-3.5 rounded-xl bg-brand-negative/15 border border-brand-negative/30 text-brand-negative text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Today's Paper Trades Quick-Select Strip */}
+        {todayPaperTrades.length > 0 && (
+          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                Today's Paper Trades Available ({todayPaperTrades.length}):
+              </span>
+              <span className="text-[10px] text-text-muted">Click any stock to 1-Click Auto-Fill</span>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 custom-scrollbar">
+              {todayPaperTrades.map(pt => {
+                const isCurrent = symbol.toUpperCase() === pt.stockSymbol.toUpperCase();
+                return (
+                  <button
+                    key={pt.stockSymbol}
+                    type="button"
+                    onClick={() => applyPaperTrade(pt)}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer ${
+                      isCurrent
+                        ? 'bg-amber-400 text-dark-950 shadow-md font-black ring-2 ring-amber-300/50'
+                        : 'bg-bg-secondary hover:bg-bg-card border border-border-subtle text-text-primary hover:border-amber-500/40'
+                    }`}
+                  >
+                    <span>{pt.stockSymbol}</span>
+                    <span className="text-[10px] opacity-85 font-mono">
+                      Qty: {pt.quantity} @ ₹{pt.entryPrice}{pt.exitPrice ? ` → ₹${pt.exitPrice}` : ''}
+                    </span>
+                    {pt.netPnL !== undefined && (
+                      <span
+                        className={`text-[10px] font-bold ${
+                          pt.netPnL >= 0
+                            ? isCurrent ? 'text-dark-950 font-black' : 'text-emerald-400'
+                            : isCurrent ? 'text-red-950 font-black' : 'text-rose-400'
+                        }`}
+                      >
+                        {pt.netPnL >= 0 ? '+' : ''}₹{Math.round(pt.netPnL)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -540,6 +722,39 @@ export const NewTradeModal: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Paper Trade Auto-Fill Status Banner */}
+        {autoFilledTrade && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between animate-fadeIn text-xs shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 flex-shrink-0">
+                <Zap className="w-4 h-4 fill-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold text-amber-300 text-xs">
+                    ⚡ Auto-Filled from Today's Paper Trading ({autoFilledTrade.stockSymbol})
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold">
+                    {autoFilledTrade.sourceLabel}
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-secondary truncate mt-0.5">
+                  Entry: ₹{autoFilledTrade.entryPrice} • Exit: ₹{autoFilledTrade.exitPrice || '--'} • SL: ₹{autoFilledTrade.stopLoss || '--'} • Target: ₹{autoFilledTrade.targetPrice || '--'} • Qty: {autoFilledTrade.quantity} • Hold: {autoFilledTrade.holdingMinutes}m
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearAutoFill}
+              className="text-[11px] font-bold text-text-muted hover:text-text-primary px-3 py-1.5 rounded-xl hover:bg-bg-elevated transition-colors flex items-center gap-1.5 flex-shrink-0 border border-border-subtle cursor-pointer ml-2"
+              title="Reset fields to blank manual entry"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Clear
+            </button>
+          </div>
+        )}
 
         {/* Prices Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -189,6 +189,28 @@ export interface PaperPosition {
   netPnL?: number;
 }
 
+export interface ClosedPaperTrade {
+  id: string;
+  stockSymbol: string;
+  stockName: string;
+  direction: TradeDirection;
+  productType: 'INTRADAY (MIS)' | 'DELIVERY (CNC)';
+  quantity: number;
+  entryPrice: number;
+  exitPrice: number;
+  stopLoss?: number;
+  targetPrice?: number;
+  openedAt: string;
+  closedAt: string;
+  holdingMinutes: number;
+  grossPnL: number;
+  netPnL: number;
+  charges: number;
+  maePrice?: number;
+  mfePrice?: number;
+  contractNoteId?: string;
+}
+
 export interface PaperPortfolio {
   initialCapital: number;
   cashBalance: number;
