@@ -18,9 +18,22 @@ import {
 import { StorageService } from "../services/StorageService";
 import { DemoDataSeeder } from "../services/DemoDataSeeder";
 import { TradingCalculationService } from "../services/TradingCalculationService";
+import { AudioService } from "../services/AudioService";
 import { useMarketData } from "./MarketDataContext";
 
+export interface ToastNotification {
+  id: string;
+  type: "success" | "error" | "info" | "warning";
+  title: string;
+  message?: string;
+  timestamp: number;
+}
+
 interface AppContextType {
+  toasts: ToastNotification[];
+  showToast: (title: string, type?: ToastNotification['type'], message?: string) => void;
+  removeToast: (id: string) => void;
+
   watchlist: string[];
   addToWatchlist: (symbol: string) => Promise<void>;
   removeFromWatchlist: (symbol: string) => Promise<void>;
@@ -128,6 +141,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [preferences, setPreferences] = useState<TradingPreferences>(DemoDataSeeder.getInitialPreferences());
   const [profile, setProfile] = useState<UserProfile>(DemoDataSeeder.getInitialProfile());
   const [settings, setSettings] = useState<AppSettings>(DemoDataSeeder.getInitialSettings());
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+
+  const showToast = useCallback((title: string, type: ToastNotification['type'] = 'info', message?: string) => {
+    const id = 'toast-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    const newToast: ToastNotification = { id, type, title, message, timestamp: Date.now() };
+    setToasts(prev => [newToast, ...prev.slice(0, 4)]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
 
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [analyticsActiveTab, setAnalyticsActiveTab] = useState<"OVERVIEW" | "TIME_OF_DAY" | "MFE_MAE" | "COST_INDISCIPLINE">("OVERVIEW");
@@ -477,8 +504,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const totalDeduction = requiredMargin + charges.totalCharges;
 
     if (totalDeduction > paperPortfolio.cashBalance) {
-      alert(`Insufficient available margin. Required: ₹${totalDeduction.toLocaleString("en-IN")} (Margin: ₹${requiredMargin.toLocaleString("en-IN")} + Charges: ₹${charges.totalCharges.toFixed(2)}), Available Cash: ₹${paperPortfolio.cashBalance.toLocaleString("en-IN")}`);
-      return;
+      const errMsg = `Insufficient available margin. Required: ₹${Math.round(totalDeduction).toLocaleString("en-IN")}, Available Cash: ₹${Math.round(paperPortfolio.cashBalance).toLocaleString("en-IN")}`;
+      showToast("Margin Shortfall", "error", errMsg);
+      AudioService.playErrorSound();
+      throw new Error(errMsg);
     }
 
     const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
@@ -496,8 +525,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const newOrders = [order, ...paperOrders];
-    setPaperOrders(newOrders);
-    await StorageService.save("paperOrders", order);
 
     // Existing position lookup
     const existingPosIndex = paperPositions.findIndex(
@@ -551,9 +578,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatedPositions = [newPos, ...paperPositions];
     }
 
-    setPaperPositions(updatedPositions);
-    await StorageService.saveAll("paperPositions", updatedPositions);
-
     const newPortfolio: PaperPortfolio = {
       ...paperPortfolio,
       cashBalance: newCash,
@@ -562,8 +586,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalTradesCount: newTradesCount,
       totalPortfolioValue: Math.round((newCash + newUsedMargin) * 100) / 100
     };
+
+    // 1. Instant synchronous React state update for sub-second UI response
+    setPaperOrders(newOrders);
+    setPaperPositions(updatedPositions);
     setPaperPortfolio(newPortfolio);
-    await StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio });
+
+    // 2. Audio chime feedback
+    AudioService.playOrderChime();
+
+    // 3. Instant toast notification
+    showToast(
+      `Order Executed: ${order.direction} ${order.quantity} ${order.stockSymbol} @ ₹${order.price.toFixed(2)}`,
+      "success",
+      `${order.productType} • Margin: ₹${Math.round(order.marginRequired || 0).toLocaleString("en-IN")}`
+    );
+
+    // 4. Background persistence with Promise.all (non-blocking)
+    Promise.all([
+      StorageService.save("paperOrders", order),
+      StorageService.saveAll("paperPositions", updatedPositions),
+      StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio })
+    ]).catch(err => {
+      console.warn("Background persistence error:", err);
+    });
   };
 
   const closePaperPosition = async (positionId: string, exitPrice?: number) => {
@@ -596,8 +642,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newTotalCharges = Math.round(((paperPortfolio.totalChargesPaid || 0) + sellCharges.totalCharges) * 100) / 100;
 
     const updatedPositions = paperPositions.filter(p => p.id !== positionId);
-    setPaperPositions(updatedPositions);
-    await StorageService.saveAll("paperPositions", updatedPositions);
 
     const newPortfolio: PaperPortfolio = {
       ...paperPortfolio,
@@ -607,8 +651,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalChargesPaid: newTotalCharges,
       totalPortfolioValue: Math.round((newCash + newUsedMargin) * 100) / 100
     };
-    setPaperPortfolio(newPortfolio);
-    await StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio });
 
     const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
 
@@ -648,8 +690,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const newClosedPaperTrades = [closedTrade, ...closedPaperTrades];
-    setClosedPaperTrades(newClosedPaperTrades);
-    await StorageService.save("closedPaperTrades", closedTrade);
 
     const closeOrder: PaperOrder = {
       id: "ord-" + Date.now(),
@@ -669,15 +709,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       contractNoteId
     };
     const newOrders = [closeOrder, ...paperOrders];
+
+    // 1. Instant synchronous React state update
+    setPaperPositions(updatedPositions);
+    setPaperPortfolio(newPortfolio);
+    setClosedPaperTrades(newClosedPaperTrades);
     setPaperOrders(newOrders);
-    await StorageService.save("paperOrders", closeOrder);
+
+    // 2. Audio chime feedback
+    AudioService.playSquareOffChime();
+
+    // 3. Instant toast notification
+    showToast(
+      `Position Squared Off: ${pos.stockSymbol} (${pos.direction} ${pos.quantity})`,
+      netPnL >= 0 ? "success" : "warning",
+      `P&L: ₹${netPnL >= 0 ? "+" : ""}${netPnL.toLocaleString("en-IN")} • Exit Price: ₹${finalPrice.toFixed(2)}`
+    );
+
+    // 4. Background persistence
+    Promise.all([
+      StorageService.saveAll("paperPositions", updatedPositions),
+      StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio }),
+      StorageService.save("closedPaperTrades", closedTrade),
+      StorageService.save("paperOrders", closeOrder)
+    ]).catch(err => {
+      console.warn("Background persistence error on position close:", err);
+    });
   };
 
   const squareOffAllPositions = async () => {
     if (paperPositions.length === 0) return;
-    for (const pos of [...paperPositions]) {
-      await closePaperPosition(pos.id);
-    }
+    await Promise.all([...paperPositions].map(pos => closePaperPosition(pos.id)));
   };
 
   const addVirtualFunds = async (amount: number) => {
@@ -841,6 +903,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removeFromWatchlist,
         reorderWatchlist,
         isInWatchlist,
+
+        toasts,
+        showToast,
+        removeToast,
 
         tiltLockState,
         isTiltLocked,

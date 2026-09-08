@@ -20,6 +20,7 @@ import { StockDetailModal } from "./components/modals/StockDetailModal";
 import { PlaceOrderModal } from "./components/modals/PlaceOrderModal";
 import { ContractNoteModal } from "./components/modals/ContractNoteModal";
 import { TiltLockModal } from "./components/modals/TiltLockModal";
+import { ToastContainer } from "./components/common/ToastContainer";
 
 export const App: React.FC = () => {
   const {
@@ -77,6 +78,7 @@ export const App: React.FC = () => {
         onClose={() => setIsContractNoteModalOpen(false)}
       />
       <TiltLockModal />
+      <ToastContainer />
     </AppLayout>
   );
 };

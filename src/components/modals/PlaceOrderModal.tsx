@@ -6,6 +6,7 @@ import { useApp } from "../../context/AppContext";
 import { useMarketData } from "../../context/MarketDataContext";
 import { TradeDirection } from "../../types";
 import { TradingCalculationService } from "../../services/TradingCalculationService";
+import confetti from "canvas-confetti";
 import {
   TrendingUp,
   TrendingDown,
@@ -42,6 +43,7 @@ export const PlaceOrderModal: React.FC = () => {
   const [isChargesExpanded, setIsChargesExpanded] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (selectedStockForOrder) {
@@ -123,25 +125,48 @@ export const PlaceOrderModal: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      await placePaperOrder({
-        stockSymbol: quote.symbol,
-        stockName: quote.name,
-        direction,
-        orderType,
-        productType,
-        quantity,
-        price: executionPrice,
-        triggerPrice: triggerPrice ? parseFloat(triggerPrice) : undefined,
-        targetPrice: targetPrice ? parseFloat(targetPrice) : undefined,
-        stopLoss: stopLoss ? parseFloat(stopLoss) : undefined
-      });
+      // Execute order with safety race against a 1200ms timeout so button NEVER stays stuck
+      await Promise.race([
+        placePaperOrder({
+          stockSymbol: quote.symbol,
+          stockName: quote.name,
+          direction,
+          orderType,
+          productType,
+          quantity,
+          price: executionPrice,
+          triggerPrice: triggerPrice ? parseFloat(triggerPrice) : undefined,
+          targetPrice: targetPrice ? parseFloat(targetPrice) : undefined,
+          stopLoss: stopLoss ? parseFloat(stopLoss) : undefined
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Execution timeout")), 1200)
+        )
+      ]);
 
-      setIsPlaceOrderModalOpen(false);
-      setSelectedStockForOrder(null);
+      setIsSuccess(true);
+
+      // Light celebratory confetti
+      try {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.6 },
+          colors: isBuy ? ['#10b981', '#34d399', '#06b6d4'] : ['#ef4444', '#f87171', '#f59e0b']
+        });
+      } catch {}
+
+      // Promptly close modal after brief visual success state (180ms)
+      setTimeout(() => {
+        setIsPlaceOrderModalOpen(false);
+        setSelectedStockForOrder(null);
+        setIsSuccess(false);
+        setIsSubmitting(false);
+      }, 180);
     } catch (err: any) {
-      setErrorMessage(err?.message || "Failed to execute order.");
-    } finally {
       setIsSubmitting(false);
+      setIsSuccess(false);
+      setErrorMessage(err?.message || "Failed to execute order. Please verify margin and try again.");
     }
   };
 
@@ -511,11 +536,27 @@ export const PlaceOrderModal: React.FC = () => {
             size="md"
             disabled={!hasSufficientMargin || isSubmitting}
             className={`flex-[2] font-bold text-white shadow-lg transition-all active:scale-95 ${
-              isBuy ? "bg-[#1E60D5] hover:bg-[#1A54BD]" : "bg-[#EF4444] hover:bg-[#DC2626]"
+              isSuccess
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : isBuy
+                ? "bg-[#1E60D5] hover:bg-[#1A54BD]"
+                : "bg-[#EF4444] hover:bg-[#DC2626]"
             }`}
-            icon={isBuy ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            icon={
+              isSuccess ? (
+                <CheckCircle2 className="w-4 h-4 animate-bounce text-white" />
+              ) : isBuy ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )
+            }
           >
-            {isSubmitting ? "Executing..." : `${direction} ${symbol} (${quantity} Qty)`}
+            {isSuccess
+              ? "✓ Order Placed!"
+              : isSubmitting
+              ? "⚡ Executing..."
+              : `${direction} ${symbol} (${quantity} Qty)`}
           </Button>
         </div>
       </form>
