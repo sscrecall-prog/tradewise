@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   ExternalLink
 } from "lucide-react";
+import { IntradaySignalScanner } from "../components/markets/IntradaySignalScanner";
 
 export const MarketsPage: React.FC = () => {
   const { quotes, indices, openStockModal, searchAllIndianStocks, isLiveConnected, lastLiveUpdate } = useMarketData();
@@ -146,6 +147,9 @@ export const MarketsPage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Intraday Signal Confluence Scanner */}
+      <IntradaySignalScanner />
 
       {/* Comprehensive Search & Category Bar */}
       <div className="p-4 rounded-2xl bg-bg-card border border-border-subtle space-y-3">

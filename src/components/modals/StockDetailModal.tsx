@@ -18,8 +18,11 @@ import {
   X,
   ExternalLink,
   Sparkles,
-  Layers
+  Layers,
+  Activity,
+  ShieldCheck
 } from "lucide-react";
+import { IntradayConfluenceWidget } from "../common/IntradayConfluenceWidget";
 
 export const StockDetailModal: React.FC = () => {
   const { selectedStockSymbol, closeStockModal, getQuote, getHistoricalData, fetchAndAddQuote } = useMarketData();
@@ -32,6 +35,7 @@ export const StockDetailModal: React.FC = () => {
   } = useApp();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeViewTab, setActiveViewTab] = useState<"chart" | "confluence">("chart");
   const [timeframe, setTimeframe] = useState<TimeFrame>("1D");
   const [history, setHistory] = useState<HistoricalPrice[]>([]);
   const [loadingChart, setLoadingChart] = useState(false);
@@ -124,8 +128,31 @@ export const StockDetailModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Quick Buy/Sell, Watchlist, Fullscreen Exit, External Link, Close */}
+          {/* Right: View Switcher, Quick Buy/Sell, Watchlist, Fullscreen Exit, External Link, Close */}
           <div className="flex items-center gap-2">
+            <div className="flex items-center p-1 rounded-xl bg-bg-card border border-border-subtle">
+              <button
+                onClick={() => setActiveViewTab("chart")}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  activeViewTab === "chart"
+                    ? "bg-brand-accent text-white shadow-xs"
+                    : "text-text-muted hover:text-text-primary"
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" /> Chart
+              </button>
+              <button
+                onClick={() => setActiveViewTab("confluence")}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  activeViewTab === "confluence"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "text-text-muted hover:text-text-primary"
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" /> 🎯 Intraday Edge
+              </button>
+            </div>
+
             <button
               onClick={() => handleStartTrade("BUY")}
               className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-brand-positive hover:bg-emerald-600 text-white shadow-sm transition-colors"
@@ -180,9 +207,13 @@ export const StockDetailModal: React.FC = () => {
           </div>
         </header>
 
-        {/* Fullscreen Main Chart View Area */}
-        <main className="flex-1 w-full h-[calc(100vh-3.5rem)] bg-[#090A0F] overflow-hidden relative">
-          {loadingChart && history.length === 0 ? (
+        {/* Fullscreen Main Content Area */}
+        <main className="flex-1 w-full h-[calc(100vh-3.5rem)] bg-[#090A0F] overflow-y-auto relative p-4 custom-scrollbar">
+          {activeViewTab === "confluence" ? (
+            <div className="max-w-5xl mx-auto py-4">
+              <IntradayConfluenceWidget quote={quote} onCloseParentModal={closeStockModal} />
+            </div>
+          ) : loadingChart && history.length === 0 ? (
             <div className="w-full h-full flex items-center justify-center text-xs text-text-muted">
               Loading live exchange candles...
             </div>
@@ -192,7 +223,7 @@ export const StockDetailModal: React.FC = () => {
               symbol={quote.symbol}
               timeframe={timeframe}
               onTimeframeChange={setTimeframe}
-              height={window.innerHeight - 60}
+              height={window.innerHeight - 80}
               className="w-full h-full border-0 rounded-none"
             />
           )}
@@ -271,6 +302,30 @@ export const StockDetailModal: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* View Switcher: Chart vs Confluence */}
+              <div className="flex items-center p-1 rounded-xl bg-bg-secondary border border-border-subtle">
+                <button
+                  onClick={() => setActiveViewTab("chart")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    activeViewTab === "chart"
+                      ? "bg-brand-accent text-white shadow-xs"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  <Activity className="w-3.5 h-3.5" /> Chart
+                </button>
+                <button
+                  onClick={() => setActiveViewTab("confluence")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    activeViewTab === "confluence"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" /> 🎯 Intraday Edge
+                </button>
+              </div>
+
               <button
                 onClick={() => handleStartTrade("BUY")}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-brand-positive hover:bg-emerald-600 text-white shadow-sm transition-colors"
@@ -294,59 +349,66 @@ export const StockDetailModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Chart Display Area: TradingView Official Lightweight Engine */}
-          <div className="w-full">
-            {loadingChart && history.length === 0 ? (
-              <div className="h-[460px] rounded-2xl bg-[#090A0F] border border-border-subtle flex items-center justify-center text-xs text-text-muted">
-                Loading live exchange candles...
+          {/* Conditional View: Intraday Confluence Widget OR Chart Display */}
+          {activeViewTab === "confluence" ? (
+            <IntradayConfluenceWidget quote={quote} onCloseParentModal={closeStockModal} />
+          ) : (
+            <>
+              {/* Chart Display Area: TradingView Official Lightweight Engine */}
+              <div className="w-full">
+                {loadingChart && history.length === 0 ? (
+                  <div className="h-[460px] rounded-2xl bg-[#090A0F] border border-border-subtle flex items-center justify-center text-xs text-text-muted">
+                    Loading live exchange candles...
+                  </div>
+                ) : (
+                  <TradingViewProChart
+                    data={history}
+                    symbol={quote.symbol}
+                    timeframe={timeframe}
+                    onTimeframeChange={setTimeframe}
+                    height={460}
+                    className="w-full"
+                  />
+                )}
               </div>
-            ) : (
-              <TradingViewProChart
-                data={history}
-                symbol={quote.symbol}
-                timeframe={timeframe}
-                onTimeframeChange={setTimeframe}
-                height={460}
-                className="w-full"
-              />
-            )}
-          </div>
 
-          {/* Key Fundamental & Market Data Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">Open</span>
-              <span className="text-sm font-semibold text-text-primary">₹{quote.open.toFixed(2)}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">Day High</span>
-              <span className="text-sm font-semibold text-brand-positive">₹{quote.high.toFixed(2)}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">Day Low</span>
-              <span className="text-sm font-semibold text-brand-negative">₹{quote.low.toFixed(2)}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">Prev. Close</span>
-              <span className="text-sm font-semibold text-text-primary">₹{quote.prevClose.toFixed(2)}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">52W High</span>
-              <span className="text-sm font-semibold text-text-primary">₹{quote.high52W.toFixed(2)}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">52W Low</span>
-              <span className="text-sm font-semibold text-text-primary">₹{quote.low52W.toFixed(2)}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">Volume</span>
-              <span className="text-sm font-semibold text-text-primary">{quote.volume.toLocaleString("en-IN")}</span>
-            </div>
-            <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
-              <span className="text-[11px] text-text-muted block">Market Cap</span>
-              <span className="text-sm font-semibold text-text-primary">{quote.marketCap || "Large Cap"}</span>
-            </div>
-          </div>
+              {/* Key Fundamental & Market Data Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">Open</span>
+                  <span className="text-sm font-semibold text-text-primary">₹{quote.open.toFixed(2)}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">Day High</span>
+                  <span className="text-sm font-semibold text-brand-positive">₹{quote.high.toFixed(2)}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">Day Low</span>
+                  <span className="text-sm font-semibold text-brand-negative">₹{quote.low.toFixed(2)}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">Prev. Close</span>
+                  <span className="text-sm font-semibold text-text-primary">₹{quote.prevClose.toFixed(2)}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">52W High</span>
+                  <span className="text-sm font-semibold text-text-primary">₹{quote.high52W.toFixed(2)}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">52W Low</span>
+                  <span className="text-sm font-semibold text-text-primary">₹{quote.low52W.toFixed(2)}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">Volume</span>
+                  <span className="text-sm font-semibold text-text-primary">{quote.volume.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-bg-secondary border border-border-subtle">
+                  <span className="text-[11px] text-text-muted block">Market Cap</span>
+                  <span className="text-sm font-semibold text-text-primary">{quote.marketCap || "Large Cap"}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
