@@ -47,8 +47,9 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const loadData = useCallback(async () => {
     try {
+      const priorityList = selectedStockSymbol ? [selectedStockSymbol] : [];
       const [quotesData, indicesData] = await Promise.all([
-        MarketDataService.getAllQuotes(),
+        MarketDataService.getAllQuotes(priorityList),
         MarketDataService.getIndices()
       ]);
       setQuotes(prev => {
@@ -71,17 +72,25 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedStockSymbol]);
 
   useEffect(() => {
     loadData();
 
-    // Periodic live market sync every 15 seconds
+    // High-frequency live market sync every 2.5 seconds (2,500ms)
     const livePollInterval = setInterval(() => {
       loadData();
-    }, 15000);
+    }, 2500);
 
-    return () => clearInterval(livePollInterval);
+    // Continuous 1-second micro-tick stream for ultra-fluid live terminal feedback
+    const tickInterval = setInterval(() => {
+      setQuotes(prev => MarketDataService.applyMicroTick(prev));
+    }, 1000);
+
+    return () => {
+      clearInterval(livePollInterval);
+      clearInterval(tickInterval);
+    };
   }, [loadData]);
 
   const getQuote = (symbol: string) => {

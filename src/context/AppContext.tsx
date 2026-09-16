@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import {
   JournalEntry,
   TradePlan,
@@ -61,7 +61,7 @@ interface AppContextType {
   paperOrders: PaperOrder[];
   closedPaperTrades: ClosedPaperTrade[];
   placePaperOrder: (order: Omit<PaperOrder, "id" | "timestamp" | "status">) => Promise<void>;
-  closePaperPosition: (positionId: string, exitPrice?: number) => Promise<void>;
+  closePaperPosition: (positionId: string, exitPrice?: number, exitReason?: 'MANUAL' | 'STOP_LOSS' | 'TARGET' | 'AUTO_SQUARE_OFF') => Promise<void>;
   resetPaperTrading: () => Promise<void>;
   addVirtualFunds: (amount: number) => Promise<void>;
   squareOffAllPositions: () => Promise<void>;
@@ -144,6 +144,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [profile, setProfile] = useState<UserProfile>(DemoDataSeeder.getInitialProfile());
   const [settings, setSettings] = useState<AppSettings>(DemoDataSeeder.getInitialSettings());
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const processingSquareOffRef = useRef<Set<string>>(new Set());
 
   const showToast = useCallback((title: string, type: ToastNotification['type'] = 'info', message?: string) => {
     const id = 'toast-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
@@ -383,11 +384,158 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     initializeAppState();
   }, [initializeAppState]);
 
-  // Live quote sync for paper trading positions
+  const closePaperPosition = useCallback(async (
+    positionId: string,
+    exitPrice?: number,
+    exitReason: 'MANUAL' | 'STOP_LOSS' | 'TARGET' | 'AUTO_SQUARE_OFF' = 'MANUAL'
+  ) => {
+    const pos = paperPositions.find(p => p.id === positionId);
+    if (!pos) return;
+
+    const liveQuote = quotes.find(q => q.symbol.toUpperCase() === pos.stockSymbol.toUpperCase());
+    const finalPrice = exitPrice || (liveQuote ? liveQuote.price : pos.currentPrice);
+    const isIntraday = pos.productType === "INTRADAY (MIS)";
+    const exitDirection: TradeDirection = pos.direction === "BUY" ? "SELL" : "BUY";
+
+    // Calculate exit regulatory & brokerage charges
+    const sellCharges = TradingCalculationService.calculateOrderCharges(
+      finalPrice,
+      pos.quantity,
+      exitDirection,
+      isIntraday
+    );
+
+    const priceDiff = pos.direction === "BUY" ? (finalPrice - pos.avgPrice) : (pos.avgPrice - finalPrice);
+    const grossPnL = Math.round(priceDiff * pos.quantity * 100) / 100;
+    const totalTradeCharges = Math.round((pos.buyCharges + sellCharges.totalCharges) * 100) / 100;
+    const netPnL = Math.round((grossPnL - totalTradeCharges) * 100) / 100;
+
+    // Return the margin allocated + gross profit/loss minus exit taxes
+    const returnCash = Math.round((pos.marginAllocated + grossPnL - sellCharges.totalCharges) * 100) / 100;
+    const newCash = Math.round((paperPortfolio.cashBalance + returnCash) * 100) / 100;
+    const newUsedMargin = Math.max(0, Math.round((paperPortfolio.usedMargin - pos.marginAllocated) * 100) / 100);
+    const newRealizedPnL = Math.round((paperPortfolio.realizedPnL + netPnL) * 100) / 100;
+    const newTotalCharges = Math.round(((paperPortfolio.totalChargesPaid || 0) + sellCharges.totalCharges) * 100) / 100;
+
+    const updatedPositions = paperPositions.filter(p => p.id !== positionId);
+
+    const newPortfolio: PaperPortfolio = {
+      ...paperPortfolio,
+      cashBalance: newCash,
+      usedMargin: newUsedMargin,
+      realizedPnL: newRealizedPnL,
+      totalChargesPaid: newTotalCharges,
+      totalPortfolioValue: Math.round((newCash + newUsedMargin) * 100) / 100
+    };
+
+    const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
+
+    const openedTime = new Date(pos.openedAt).getTime();
+    const holdingMins = !isNaN(openedTime)
+      ? Math.max(1, Math.round((Date.now() - openedTime) / 60000))
+      : 15;
+
+    const isBuy = pos.direction === "BUY";
+    const maePrice = isBuy
+      ? Math.round(Math.min(pos.avgPrice, pos.stopLoss || pos.avgPrice * 0.985) * 100) / 100
+      : Math.round(Math.max(pos.avgPrice, pos.stopLoss || pos.avgPrice * 1.015) * 100) / 100;
+    const mfePrice = isBuy
+      ? Math.round(Math.max(finalPrice, pos.targetPrice || pos.avgPrice * 1.025) * 100) / 100
+      : Math.round(Math.min(finalPrice, pos.targetPrice || pos.avgPrice * 0.975) * 100) / 100;
+
+    const closedTrade: ClosedPaperTrade = {
+      id: "cpt-" + Date.now(),
+      stockSymbol: pos.stockSymbol,
+      stockName: pos.stockName,
+      direction: pos.direction,
+      productType: pos.productType,
+      quantity: pos.quantity,
+      entryPrice: pos.avgPrice,
+      exitPrice: finalPrice,
+      stopLoss: pos.stopLoss,
+      targetPrice: pos.targetPrice,
+      openedAt: pos.openedAt,
+      closedAt: new Date().toISOString(),
+      holdingMinutes: holdingMins,
+      grossPnL,
+      netPnL,
+      charges: totalTradeCharges,
+      maePrice,
+      mfePrice,
+      contractNoteId,
+      exitReason
+    };
+
+    const newClosedPaperTrades = [closedTrade, ...closedPaperTrades];
+
+    const closeOrder: PaperOrder = {
+      id: "ord-" + Date.now(),
+      stockSymbol: pos.stockSymbol,
+      stockName: pos.stockName,
+      direction: exitDirection,
+      orderType: "MARKET",
+      productType: pos.productType,
+      quantity: pos.quantity,
+      price: finalPrice,
+      executedPrice: finalPrice,
+      status: "EXECUTED",
+      timestamp: new Date().toLocaleString("en-IN"),
+      marginRequired: 0,
+      turnover: Math.round(finalPrice * pos.quantity * 100) / 100,
+      charges: sellCharges,
+      contractNoteId,
+      exitReason
+    };
+    const newOrders = [closeOrder, ...paperOrders];
+
+    // 1. Instant synchronous React state update
+    setPaperPositions(updatedPositions);
+    setPaperPortfolio(newPortfolio);
+    setClosedPaperTrades(newClosedPaperTrades);
+    setPaperOrders(newOrders);
+
+    // 2. Audio chime feedback
+    AudioService.playSquareOffChime();
+
+    // 3. Instant toast notification with distinct messaging for Target vs Stop Loss
+    if (exitReason === 'TARGET') {
+      showToast(
+        `🎯 Target Hit! Auto Squared Off: ${pos.stockSymbol}`,
+        "success",
+        `Target ₹${pos.targetPrice?.toFixed(2)} achieved! Net Profit: +₹${netPnL.toLocaleString("en-IN")} • ${pos.direction} ${pos.quantity} Qty`
+      );
+    } else if (exitReason === 'STOP_LOSS') {
+      showToast(
+        `🛑 Stop Loss Hit! Auto Squared Off: ${pos.stockSymbol}`,
+        "warning",
+        `Stop Loss ₹${pos.stopLoss?.toFixed(2)} hit. Capital Preserved! Net P&L: ${netPnL >= 0 ? "+" : ""}₹${netPnL.toLocaleString("en-IN")} • ${pos.direction} ${pos.quantity} Qty`
+      );
+    } else {
+      showToast(
+        `Position Squared Off: ${pos.stockSymbol} (${pos.direction} ${pos.quantity})`,
+        netPnL >= 0 ? "success" : "warning",
+        `P&L: ₹${netPnL >= 0 ? "+" : ""}${netPnL.toLocaleString("en-IN")} • Exit Price: ₹${finalPrice.toFixed(2)}`
+      );
+    }
+
+    // 4. Background persistence
+    Promise.all([
+      StorageService.saveAll("paperPositions", updatedPositions),
+      StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio }),
+      StorageService.save("closedPaperTrades", closedTrade),
+      StorageService.save("paperOrders", closeOrder)
+    ]).catch(err => {
+      console.warn("Background persistence error on position close:", err);
+    });
+  }, [quotes, paperPositions, paperPortfolio, closedPaperTrades, paperOrders, showToast]);
+
+  // Live quote sync & Auto Square-Off Engine for paper trading positions
   useEffect(() => {
     if (paperPositions.length === 0 || quotes.length === 0) return;
 
     let totalUnrealized = 0;
+    const positionsToAutoClose: { pos: PaperPosition; exitPrice: number; reason: 'TARGET' | 'STOP_LOSS' }[] = [];
+
     const updatedPositions = paperPositions.map(pos => {
       const liveQuote = quotes.find(q => q.symbol.toUpperCase() === pos.stockSymbol.toUpperCase());
       const currentPrice = liveQuote ? liveQuote.price : pos.currentPrice;
@@ -396,6 +544,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const unrealizedPnLPercent = Math.round((priceDiff / pos.avgPrice) * 10000) / 100;
       const netPnL = Math.round((unrealizedPnL - (pos.buyCharges || 0)) * 100) / 100;
       totalUnrealized += unrealizedPnL;
+
+      // Auto Square-Off Breach Detection:
+      if (!processingSquareOffRef.current.has(pos.id)) {
+        if (pos.direction === "BUY") {
+          // BUY Target Hit: currentPrice touched or surpassed target
+          if (pos.targetPrice && pos.targetPrice > 0 && currentPrice >= pos.targetPrice) {
+            positionsToAutoClose.push({
+              pos,
+              exitPrice: Math.max(currentPrice, pos.targetPrice),
+              reason: 'TARGET'
+            });
+            processingSquareOffRef.current.add(pos.id);
+          }
+          // BUY Stop Loss Hit: currentPrice dropped to or below SL
+          else if (pos.stopLoss && pos.stopLoss > 0 && currentPrice <= pos.stopLoss) {
+            positionsToAutoClose.push({
+              pos,
+              exitPrice: Math.min(currentPrice, pos.stopLoss),
+              reason: 'STOP_LOSS'
+            });
+            processingSquareOffRef.current.add(pos.id);
+          }
+        } else {
+          // SELL (Short) Target Hit: currentPrice fell to or below target
+          if (pos.targetPrice && pos.targetPrice > 0 && currentPrice <= pos.targetPrice) {
+            positionsToAutoClose.push({
+              pos,
+              exitPrice: Math.min(currentPrice, pos.targetPrice),
+              reason: 'TARGET'
+            });
+            processingSquareOffRef.current.add(pos.id);
+          }
+          // SELL (Short) Stop Loss Hit: currentPrice rose to or above SL
+          else if (pos.stopLoss && pos.stopLoss > 0 && currentPrice >= pos.stopLoss) {
+            positionsToAutoClose.push({
+              pos,
+              exitPrice: Math.max(currentPrice, pos.stopLoss),
+              reason: 'STOP_LOSS'
+            });
+            processingSquareOffRef.current.add(pos.id);
+          }
+        }
+      }
 
       return {
         ...pos,
@@ -412,7 +603,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unrealizedPnL: Math.round(totalUnrealized * 100) / 100,
       totalPortfolioValue: Math.round((prev.cashBalance + prev.usedMargin + totalUnrealized) * 100) / 100
     }));
-  }, [quotes]);
+
+    // Trigger auto square-offs sequentially for any breached positions
+    if (positionsToAutoClose.length > 0) {
+      (async () => {
+        for (const item of positionsToAutoClose) {
+          try {
+            await closePaperPosition(item.pos.id, item.exitPrice, item.reason);
+          } catch (err) {
+            console.error("Auto square-off execution error:", err);
+          } finally {
+            setTimeout(() => {
+              processingSquareOffRef.current.delete(item.pos.id);
+            }, 1200);
+          }
+        }
+      })();
+    }
+  }, [quotes, paperPositions, closePaperPosition]);
 
   const addToWatchlist = async (symbol: string) => {
     const cleanSym = symbol.toUpperCase().trim();
@@ -615,134 +823,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const closePaperPosition = async (positionId: string, exitPrice?: number) => {
-    const pos = paperPositions.find(p => p.id === positionId);
-    if (!pos) return;
-
-    const liveQuote = quotes.find(q => q.symbol.toUpperCase() === pos.stockSymbol.toUpperCase());
-    const finalPrice = exitPrice || (liveQuote ? liveQuote.price : pos.currentPrice);
-    const isIntraday = pos.productType === "INTRADAY (MIS)";
-    const exitDirection: TradeDirection = pos.direction === "BUY" ? "SELL" : "BUY";
-
-    // Calculate exit regulatory & brokerage charges
-    const sellCharges = TradingCalculationService.calculateOrderCharges(
-      finalPrice,
-      pos.quantity,
-      exitDirection,
-      isIntraday
-    );
-
-    const priceDiff = pos.direction === "BUY" ? (finalPrice - pos.avgPrice) : (pos.avgPrice - finalPrice);
-    const grossPnL = Math.round(priceDiff * pos.quantity * 100) / 100;
-    const totalTradeCharges = Math.round((pos.buyCharges + sellCharges.totalCharges) * 100) / 100;
-    const netPnL = Math.round((grossPnL - totalTradeCharges) * 100) / 100;
-
-    // Return the margin allocated + gross profit/loss minus exit taxes
-    const returnCash = Math.round((pos.marginAllocated + grossPnL - sellCharges.totalCharges) * 100) / 100;
-    const newCash = Math.round((paperPortfolio.cashBalance + returnCash) * 100) / 100;
-    const newUsedMargin = Math.max(0, Math.round((paperPortfolio.usedMargin - pos.marginAllocated) * 100) / 100);
-    const newRealizedPnL = Math.round((paperPortfolio.realizedPnL + netPnL) * 100) / 100;
-    const newTotalCharges = Math.round(((paperPortfolio.totalChargesPaid || 0) + sellCharges.totalCharges) * 100) / 100;
-
-    const updatedPositions = paperPositions.filter(p => p.id !== positionId);
-
-    const newPortfolio: PaperPortfolio = {
-      ...paperPortfolio,
-      cashBalance: newCash,
-      usedMargin: newUsedMargin,
-      realizedPnL: newRealizedPnL,
-      totalChargesPaid: newTotalCharges,
-      totalPortfolioValue: Math.round((newCash + newUsedMargin) * 100) / 100
-    };
-
-    const contractNoteId = "CN-" + Math.floor(100000 + Math.random() * 900000);
-
-    const openedTime = new Date(pos.openedAt).getTime();
-    const holdingMins = !isNaN(openedTime)
-      ? Math.max(1, Math.round((Date.now() - openedTime) / 60000))
-      : 15;
-
-    const isBuy = pos.direction === "BUY";
-    const maePrice = isBuy
-      ? Math.round(Math.min(pos.avgPrice, pos.stopLoss || pos.avgPrice * 0.985) * 100) / 100
-      : Math.round(Math.max(pos.avgPrice, pos.stopLoss || pos.avgPrice * 1.015) * 100) / 100;
-    const mfePrice = isBuy
-      ? Math.round(Math.max(finalPrice, pos.targetPrice || pos.avgPrice * 1.025) * 100) / 100
-      : Math.round(Math.min(finalPrice, pos.targetPrice || pos.avgPrice * 0.975) * 100) / 100;
-
-    const closedTrade: ClosedPaperTrade = {
-      id: "cpt-" + Date.now(),
-      stockSymbol: pos.stockSymbol,
-      stockName: pos.stockName,
-      direction: pos.direction,
-      productType: pos.productType,
-      quantity: pos.quantity,
-      entryPrice: pos.avgPrice,
-      exitPrice: finalPrice,
-      stopLoss: pos.stopLoss,
-      targetPrice: pos.targetPrice,
-      openedAt: pos.openedAt,
-      closedAt: new Date().toISOString(),
-      holdingMinutes: holdingMins,
-      grossPnL,
-      netPnL,
-      charges: totalTradeCharges,
-      maePrice,
-      mfePrice,
-      contractNoteId
-    };
-
-    const newClosedPaperTrades = [closedTrade, ...closedPaperTrades];
-
-    const closeOrder: PaperOrder = {
-      id: "ord-" + Date.now(),
-      stockSymbol: pos.stockSymbol,
-      stockName: pos.stockName,
-      direction: exitDirection,
-      orderType: "MARKET",
-      productType: pos.productType,
-      quantity: pos.quantity,
-      price: finalPrice,
-      executedPrice: finalPrice,
-      status: "EXECUTED",
-      timestamp: new Date().toLocaleString("en-IN"),
-      marginRequired: 0,
-      turnover: Math.round(finalPrice * pos.quantity * 100) / 100,
-      charges: sellCharges,
-      contractNoteId
-    };
-    const newOrders = [closeOrder, ...paperOrders];
-
-    // 1. Instant synchronous React state update
-    setPaperPositions(updatedPositions);
-    setPaperPortfolio(newPortfolio);
-    setClosedPaperTrades(newClosedPaperTrades);
-    setPaperOrders(newOrders);
-
-    // 2. Audio chime feedback
-    AudioService.playSquareOffChime();
-
-    // 3. Instant toast notification
-    showToast(
-      `Position Squared Off: ${pos.stockSymbol} (${pos.direction} ${pos.quantity})`,
-      netPnL >= 0 ? "success" : "warning",
-      `P&L: ₹${netPnL >= 0 ? "+" : ""}${netPnL.toLocaleString("en-IN")} • Exit Price: ₹${finalPrice.toFixed(2)}`
-    );
-
-    // 4. Background persistence
-    Promise.all([
-      StorageService.saveAll("paperPositions", updatedPositions),
-      StorageService.save("paperPortfolio", { id: "portfolio_main", ...newPortfolio }),
-      StorageService.save("closedPaperTrades", closedTrade),
-      StorageService.save("paperOrders", closeOrder)
-    ]).catch(err => {
-      console.warn("Background persistence error on position close:", err);
-    });
-  };
-
   const squareOffAllPositions = async () => {
     if (paperPositions.length === 0) return;
-    await Promise.all([...paperPositions].map(pos => closePaperPosition(pos.id)));
+    for (const pos of [...paperPositions]) {
+      await closePaperPosition(pos.id, undefined, 'AUTO_SQUARE_OFF');
+    }
   };
 
   const addVirtualFunds = async (amount: number) => {

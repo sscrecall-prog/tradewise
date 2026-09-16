@@ -3,8 +3,9 @@ import indianStocksData from '../data/indianStocksMaster.json';
 
 export interface IMarketDataProvider {
   getIndices(): Promise<IndexData[]>;
-  getAllQuotes(): Promise<MarketQuote[]>;
+  getAllQuotes(prioritySymbols?: string[]): Promise<MarketQuote[]>;
   getQuote(symbol: string): Promise<MarketQuote | null>;
+  applyMicroTick(quotes: MarketQuote[]): MarketQuote[];
   getHistoricalData(symbol: string, timeframe: TimeFrame): Promise<HistoricalPrice[]>;
   searchStocks(query: string): Promise<MarketQuote[]>;
   searchAllIndianStocks(query: string): ListedCompany[];
@@ -1148,7 +1149,8 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
   private cachedQuotes: MarketQuote[] | null = null;
   private dynamicQuotesCache = new Map<string, MarketQuote>();
   private lastFetchTime: number = 0;
-  private readonly CACHE_TTL_MS = 8000;
+  private roundRobinIndex: number = 0;
+  private readonly CACHE_TTL_MS = 2000;
 
   private getApiUrl(path: string): string {
     return `/api/market${path}`;
@@ -1276,82 +1278,114 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
   /**
    * Fetch quotes for prominent active stocks
    */
-  async getAllQuotes(): Promise<MarketQuote[]> {
+  /**
+   * Fetch quotes for prominent active stocks with priority symbols and round-robin batching
+   */
+  async getAllQuotes(prioritySymbols: string[] = []): Promise<MarketQuote[]> {
     const now = Date.now();
     if (this.cachedQuotes && now - this.lastFetchTime < this.CACHE_TTL_MS) {
       return this.cachedQuotes;
     }
 
     try {
-      const BATCH_SIZE = 10;
-      const results: MarketQuote[] = [];
-
-      for (let i = 0; i < POPULAR_NSE_STOCKS.length; i += BATCH_SIZE) {
-        const batch = POPULAR_NSE_STOCKS.slice(i, i + BATCH_SIZE);
-        const batchResults = await Promise.all(
-          batch.map(async base => {
-            try {
-              const yfSym = SYMBOL_TO_YF[base.symbol] || `${base.symbol}.NS`;
-              const chart = await this.fetchChart(yfSym, '1d', '5m');
-
-              if (chart && chart.meta) {
-                const meta = chart.meta;
-                const price = Math.round((meta.regularMarketPrice || base.price) * 100) / 100;
-                const prevClose = Math.round((meta.chartPreviousClose || meta.previousClose || base.prevClose) * 100) / 100;
-                const change = Math.round((price - prevClose) * 100) / 100;
-                const changePercent = prevClose > 0 ? Math.round((change / prevClose) * 10000) / 100 : 0;
-
-                const open = Math.round((meta.regularMarketOpen || base.open) * 100) / 100;
-                const high = Math.round((meta.regularMarketDayHigh || base.high) * 100) / 100;
-                const low = Math.round((meta.regularMarketDayLow || base.low) * 100) / 100;
-                const volume = meta.regularMarketVolume || base.volume;
-                const high52W = meta.fiftyTwoWeekHigh || base.high52W;
-                const low52W = meta.fiftyTwoWeekLow || base.low52W;
-
-                const quotesArr: number[] = (chart.indicators?.quote?.[0]?.close || []).filter(
-                  (v: any) => typeof v === 'number' && !isNaN(v)
-                );
-                const sparkline = quotesArr.length >= 8 ? quotesArr.slice(-20) : [prevClose, price];
-
-                return {
-                  ...base,
-                  price,
-                  change,
-                  changePercent,
-                  open,
-                  high,
-                  low,
-                  close: price,
-                  prevClose,
-                  volume,
-                  high52W,
-                  low52W,
-                  sparkline,
-                  lastUpdated: new Date().toLocaleTimeString('en-IN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                  })
-                };
-              }
-            } catch (err) {
-              // Graceful fallback to baseline
-            }
-
-            return {
-              ...base,
-              sparkline: this.generateSparkline(base.price, base.change >= 0),
-              lastUpdated: new Date().toLocaleTimeString('en-IN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-              })
-            };
-          })
-        );
-        results.push(...batchResults);
+      // Ensure baseline cache is initialized immediately
+      if (!this.cachedQuotes) {
+        this.cachedQuotes = this.getAllFallbackQuotes();
       }
 
+      // Collect target symbols for this cycle:
+      // 1. Any priority symbols (e.g. open positions, watchlist)
+      // 2. Rotating batch of 8 stocks from POPULAR_NSE_STOCKS
+      const cleanPriority = Array.from(new Set(prioritySymbols.map(s => s.toUpperCase().trim()))).filter(Boolean);
+      const BATCH_SIZE = 8;
+      const rotatingBatch = POPULAR_NSE_STOCKS.slice(this.roundRobinIndex, this.roundRobinIndex + BATCH_SIZE).map(s => s.symbol);
+      this.roundRobinIndex = (this.roundRobinIndex + BATCH_SIZE) % POPULAR_NSE_STOCKS.length;
+
+      const targetSymbols = Array.from(new Set([...cleanPriority, ...rotatingBatch]));
+
+      // Fetch live charts for targets in parallel
+      const updatedTargets = await Promise.all(
+        targetSymbols.map(async sym => {
+          try {
+            const yfSym = SYMBOL_TO_YF[sym] || `${sym}.NS`;
+            const chart = await this.fetchChart(yfSym, '1d', '5m');
+
+            if (chart && chart.meta) {
+              const meta = chart.meta;
+              const base = POPULAR_NSE_STOCKS.find(s => s.symbol.toUpperCase() === sym) || {
+                symbol: sym,
+                name: sym,
+                price: meta.regularMarketPrice || 100,
+                prevClose: meta.chartPreviousClose || meta.previousClose || 100,
+                open: meta.regularMarketOpen || 100,
+                high: meta.regularMarketDayHigh || 100,
+                low: meta.regularMarketDayLow || 100,
+                volume: meta.regularMarketVolume || 500000,
+                high52W: meta.fiftyTwoWeekHigh || 150,
+                low52W: meta.fiftyTwoWeekLow || 70,
+                sector: 'Equity'
+              };
+
+              const price = Math.round((meta.regularMarketPrice || base.price) * 100) / 100;
+              const prevClose = Math.round((meta.chartPreviousClose || meta.previousClose || base.prevClose) * 100) / 100;
+              const change = Math.round((price - prevClose) * 100) / 100;
+              const changePercent = prevClose > 0 ? Math.round((change / prevClose) * 10000) / 100 : 0;
+
+              const open = Math.round((meta.regularMarketOpen || base.open) * 100) / 100;
+              const high = Math.round((meta.regularMarketDayHigh || Math.max(base.high, price)) * 100) / 100;
+              const low = Math.round((meta.regularMarketDayLow || Math.min(base.low, price)) * 100) / 100;
+              const volume = meta.regularMarketVolume || base.volume;
+              const high52W = meta.fiftyTwoWeekHigh || base.high52W;
+              const low52W = meta.fiftyTwoWeekLow || base.low52W;
+
+              const quotesArr: number[] = (chart.indicators?.quote?.[0]?.close || []).filter(
+                (v: any) => typeof v === 'number' && !isNaN(v)
+              );
+              const sparkline = quotesArr.length >= 8 ? quotesArr.slice(-20) : [prevClose, price];
+
+              const updatedQuote: MarketQuote = {
+                ...base,
+                symbol: sym,
+                price,
+                change,
+                changePercent,
+                open,
+                high,
+                low,
+                close: price,
+                prevClose,
+                volume,
+                high52W,
+                low52W,
+                sparkline,
+                lastUpdated: new Date().toLocaleTimeString('en-IN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })
+              };
+
+              // Also update dynamic cache for non-standard symbols
+              this.dynamicQuotesCache.set(sym, updatedQuote);
+              return updatedQuote;
+            }
+          } catch {
+            // Silently retain cached
+          }
+          return null;
+        })
+      );
+
+      // Merge valid updates into cachedQuotes
+      const updatedMap = new Map<string, MarketQuote>();
+      this.cachedQuotes.forEach(q => updatedMap.set(q.symbol.toUpperCase(), q));
+      updatedTargets.forEach(q => {
+        if (q) {
+          updatedMap.set(q.symbol.toUpperCase(), q);
+        }
+      });
+
+      this.cachedQuotes = Array.from(updatedMap.values());
       this.isLiveConnected = true;
       this.lastLiveUpdated = new Date().toLocaleTimeString('en-IN', {
         hour: '2-digit',
@@ -1359,12 +1393,72 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
         second: '2-digit',
         hour12: true
       });
-      this.cachedQuotes = results;
       this.lastFetchTime = now;
-      return results;
-    } catch (e) {
-      return this.getAllFallbackQuotes();
+      return this.cachedQuotes;
+    } catch {
+      return this.cachedQuotes || this.getAllFallbackQuotes();
     }
+  }
+
+  /**
+   * Continuous micro-tick fluctuation engine (₹0.05-₹0.20 realistic ticks)
+   * Keeps price action fluid and real-time between network sync intervals
+   */
+  applyMicroTick(quotes: MarketQuote[]): MarketQuote[] {
+    if (!quotes || quotes.length === 0) return quotes;
+
+    const updated = quotes.map(quote => {
+      // 65% chance of a tick every second for natural market ebb and flow
+      if (Math.random() > 0.65) return quote;
+
+      // Realistic tick step ₹0.05 (NSE equity minimum tick size)
+      const tickStep = 0.05;
+      const numSteps = Math.floor(Math.random() * 3) + 1; // 1 to 3 ticks: 0.05, 0.10, 0.15
+      const direction = Math.random() > 0.49 ? 1 : -1;
+      const delta = direction * (numSteps * tickStep);
+
+      const newPrice = Math.round((quote.price + delta) * 100) / 100;
+      // Safeguard within ±8% of previous close
+      const maxAllowed = Math.round(quote.prevClose * 1.08 * 100) / 100;
+      const minAllowed = Math.round(quote.prevClose * 0.92 * 100) / 100;
+
+      if (newPrice > maxAllowed || newPrice < minAllowed || newPrice <= 0) {
+        return quote;
+      }
+
+      const change = Math.round((newPrice - quote.prevClose) * 100) / 100;
+      const changePercent = quote.prevClose > 0 ? Math.round((change / quote.prevClose) * 10000) / 100 : 0;
+      const high = Math.max(quote.high, newPrice);
+      const low = Math.min(quote.low, newPrice);
+      const sparkline = quote.sparkline && quote.sparkline.length > 0
+        ? [...quote.sparkline.slice(-19), newPrice]
+        : [quote.prevClose, newPrice];
+
+      return {
+        ...quote,
+        price: newPrice,
+        close: newPrice,
+        change,
+        changePercent,
+        high,
+        low,
+        sparkline,
+        lastUpdated: new Date().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        })
+      };
+    });
+
+    // Keep cached quotes aligned with latest ticks
+    if (this.cachedQuotes) {
+      const tickMap = new Map<string, MarketQuote>();
+      updated.forEach(q => tickMap.set(q.symbol.toUpperCase(), q));
+      this.cachedQuotes = this.cachedQuotes.map(q => tickMap.get(q.symbol.toUpperCase()) || q);
+    }
+
+    return updated;
   }
 
   /**

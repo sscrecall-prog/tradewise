@@ -167,6 +167,7 @@ export interface PaperOrder {
   turnover?: number;
   charges?: OrderChargesBreakdown;
   contractNoteId?: string;
+  exitReason?: 'MANUAL' | 'STOP_LOSS' | 'TARGET' | 'AUTO_SQUARE_OFF';
 }
 
 export interface PaperPosition {
@@ -209,6 +210,7 @@ export interface ClosedPaperTrade {
   maePrice?: number;
   mfePrice?: number;
   contractNoteId?: string;
+  exitReason?: 'MANUAL' | 'STOP_LOSS' | 'TARGET' | 'AUTO_SQUARE_OFF';
 }
 
 export interface PaperPortfolio {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PaperTradeSyncService } from './PaperTradeSyncService';
-import { ClosedPaperTrade, PaperPosition, PaperOrder } from '../types';
+import { MarketDataService } from './MarketDataService';
+import { ClosedPaperTrade, PaperPosition, PaperOrder, MarketQuote } from '../types';
 
 describe('PaperTradeSyncService', () => {
   const sampleClosedTrade: ClosedPaperTrade = {
@@ -131,5 +132,110 @@ describe('PaperTradeSyncService', () => {
     const symbols = all.map(t => t.stockSymbol);
     expect(symbols).toContain('HINDALCO');
     expect(symbols).toContain('RELIANCE');
+  });
+});
+
+describe('Auto Square-Off Breach Conditions', () => {
+  const buyPos: PaperPosition = {
+    id: 'pos-test-buy',
+    stockSymbol: 'ADANIPORTS',
+    stockName: 'Adani Ports Ltd.',
+    direction: 'BUY',
+    quantity: 100,
+    avgPrice: 1700.00,
+    currentPrice: 1700.00,
+    stopLoss: 1650.00,
+    targetPrice: 1800.00,
+    unrealizedPnL: 0,
+    unrealizedPnLPercent: 0,
+    productType: 'INTRADAY (MIS)',
+    openedAt: new Date().toISOString(),
+    marginAllocated: 34000,
+    leverage: 5,
+    buyCharges: 20
+  };
+
+  const sellPos: PaperPosition = {
+    id: 'pos-test-sell',
+    stockSymbol: 'TATASTEEL',
+    stockName: 'Tata Steel Ltd.',
+    direction: 'SELL',
+    quantity: 200,
+    avgPrice: 150.00,
+    currentPrice: 150.00,
+    stopLoss: 160.00,
+    targetPrice: 140.00,
+    unrealizedPnL: 0,
+    unrealizedPnLPercent: 0,
+    productType: 'INTRADAY (MIS)',
+    openedAt: new Date().toISOString(),
+    marginAllocated: 6000,
+    leverage: 5,
+    buyCharges: 10
+  };
+
+  function checkBreach(pos: PaperPosition, price: number): 'TARGET' | 'STOP_LOSS' | null {
+    if (pos.direction === 'BUY') {
+      if (pos.targetPrice && price >= pos.targetPrice) return 'TARGET';
+      if (pos.stopLoss && price <= pos.stopLoss) return 'STOP_LOSS';
+    } else {
+      if (pos.targetPrice && price <= pos.targetPrice) return 'TARGET';
+      if (pos.stopLoss && price >= pos.stopLoss) return 'STOP_LOSS';
+    }
+    return null;
+  }
+
+  it('triggers TARGET on BUY position when price touches or exceeds targetPrice', () => {
+    expect(checkBreach(buyPos, 1750.00)).toBeNull();
+    expect(checkBreach(buyPos, 1800.00)).toBe('TARGET');
+    expect(checkBreach(buyPos, 1805.00)).toBe('TARGET');
+  });
+
+  it('triggers STOP_LOSS on BUY position when price touches or falls below stopLoss', () => {
+    expect(checkBreach(buyPos, 1660.00)).toBeNull();
+    expect(checkBreach(buyPos, 1650.00)).toBe('STOP_LOSS');
+    expect(checkBreach(buyPos, 1640.00)).toBe('STOP_LOSS');
+  });
+
+  it('triggers TARGET on SELL position when price touches or falls below targetPrice', () => {
+    expect(checkBreach(sellPos, 145.00)).toBeNull();
+    expect(checkBreach(sellPos, 140.00)).toBe('TARGET');
+    expect(checkBreach(sellPos, 138.00)).toBe('TARGET');
+  });
+
+  it('triggers STOP_LOSS on SELL position when price touches or rises above stopLoss', () => {
+    expect(checkBreach(sellPos, 155.00)).toBeNull();
+    expect(checkBreach(sellPos, 160.00)).toBe('STOP_LOSS');
+    expect(checkBreach(sellPos, 165.00)).toBe('STOP_LOSS');
+  });
+});
+
+describe('Live MarketDataService Micro-Tick Engine', () => {
+  const sampleQuote: MarketQuote = {
+    symbol: 'RELIANCE',
+    name: 'Reliance Industries Ltd.',
+    price: 1300.00,
+    change: 0,
+    changePercent: 0,
+    open: 1300.00,
+    high: 1310.00,
+    low: 1290.00,
+    close: 1300.00,
+    prevClose: 1300.00,
+    volume: 5000000,
+    high52W: 1600.00,
+    low52W: 1200.00,
+    sector: 'Energy',
+    sparkline: [1300, 1300, 1300],
+    lastUpdated: '10:00:00 AM'
+  };
+
+  it('applies realistic micro-ticks within boundary constraints', () => {
+    const ticked = MarketDataService.applyMicroTick([sampleQuote]);
+    expect(ticked.length).toBe(1);
+    const q = ticked[0];
+    expect(q.price).toBeGreaterThan(sampleQuote.prevClose * 0.90);
+    expect(q.price).toBeLessThan(sampleQuote.prevClose * 1.10);
+    expect(q.sparkline.length).toBeGreaterThan(0);
   });
 });

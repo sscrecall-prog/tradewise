@@ -24,7 +24,8 @@ import {
   AlertTriangle,
   Info,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  History
 } from 'lucide-react';
 
 export const PaperTradingPage: React.FC = () => {
@@ -32,6 +33,7 @@ export const PaperTradingPage: React.FC = () => {
     paperPortfolio,
     paperPositions,
     paperOrders,
+    closedPaperTrades,
     closePaperPosition,
     resetPaperTrading,
     addVirtualFunds,
@@ -47,7 +49,7 @@ export const PaperTradingPage: React.FC = () => {
 
   const { quotes, openStockModal } = useMarketData();
 
-  const [activeTab, setActiveTab] = useState<'positions' | 'holdings' | 'orders' | 'funds'>('positions');
+  const [activeTab, setActiveTab] = useState<'positions' | 'holdings' | 'orders' | 'history' | 'funds'>('positions');
   const [closingId, setClosingId] = useState<string | null>(null);
   const [isSquaringAll, setIsSquaringAll] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -215,6 +217,10 @@ export const PaperTradingPage: React.FC = () => {
             </Badge>
             <Badge variant="neutral" size="sm">
               Official Tax & Charges Engine
+            </Badge>
+            <Badge variant="positive" size="sm" className="flex items-center gap-1 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              ⚡ Live Auto Square-Off Active
             </Badge>
           </div>
           <p className="text-xs text-text-secondary mt-1">
@@ -399,6 +405,18 @@ export const PaperTradingPage: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'history'
+              ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+              : 'border-transparent text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Closed Trades ({closedPaperTrades.length})
+        </button>
+
+        <button
           onClick={() => setActiveTab('funds')}
           className={`flex items-center gap-2 px-5 py-3 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'funds'
@@ -544,7 +562,10 @@ export const PaperTradingPage: React.FC = () => {
 
                           {/* LTP */}
                           <td className="p-3.5 text-right font-mono font-bold text-text-primary whitespace-nowrap">
-                            ₹{pos.currentPrice.toFixed(2)}
+                            <div className="flex items-center justify-end gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live stream tick active" />
+                              <span>₹{pos.currentPrice.toFixed(2)}</span>
+                            </div>
                           </td>
 
                           {/* Margin Blocked */}
@@ -579,19 +600,78 @@ export const PaperTradingPage: React.FC = () => {
                             </div>
                           </td>
 
-                          {/* Stop Loss & Target */}
+                          {/* Stop Loss & Target with Auto Square-Off Badges */}
                           <td className="p-3.5 text-center whitespace-nowrap">
-                            <div className="inline-flex flex-col items-center gap-0.5">
-                              <button
-                                onClick={() => handleOpenModifyModal(pos)}
-                                className="text-[11px] font-mono hover:text-brand-accent underline text-text-secondary flex items-center gap-1"
-                                title="Click to set/modify Stop Loss and Target"
-                              >
-                                <span>SL: {pos.stopLoss ? `₹${pos.stopLoss}` : '--'}</span>
-                                <span>•</span>
-                                <span>Tgt: {pos.targetPrice ? `₹${pos.targetPrice}` : '--'}</span>
-                              </button>
-                            </div>
+                            {(() => {
+                              const isBuy = pos.direction === 'BUY';
+                              const slDistance = pos.stopLoss 
+                                ? (isBuy ? ((pos.stopLoss - pos.currentPrice) / pos.currentPrice) * 100 : ((pos.currentPrice - pos.stopLoss) / pos.currentPrice) * 100)
+                                : null;
+                              const tgtDistance = pos.targetPrice 
+                                ? (isBuy ? ((pos.targetPrice - pos.currentPrice) / pos.currentPrice) * 100 : ((pos.currentPrice - pos.targetPrice) / pos.currentPrice) * 100)
+                                : null;
+
+                              return (
+                                <div className="inline-flex flex-col items-center gap-1.5">
+                                  <div className="flex items-center gap-1.5">
+                                    {pos.stopLoss ? (
+                                      <button
+                                        onClick={() => handleOpenModifyModal(pos)}
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25 hover:bg-rose-500/20 transition-all cursor-pointer shadow-xs"
+                                        title={`Stop Loss: ₹${pos.stopLoss.toFixed(2)}. Position will auto square-off immediately when touched.`}
+                                      >
+                                        <span className="font-bold">SL:</span>
+                                        <span>₹{pos.stopLoss.toFixed(2)}</span>
+                                        {slDistance !== null && (
+                                          <span className="text-[9px] font-bold opacity-80">
+                                            ({slDistance > 0 ? '+' : ''}{slDistance.toFixed(1)}%)
+                                          </span>
+                                        )}
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleOpenModifyModal(pos)}
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono text-text-muted hover:text-rose-500 hover:bg-rose-500/10 border border-dashed border-border-subtle hover:border-rose-500/30 transition-all cursor-pointer"
+                                        title="Click to set Stop Loss (Auto Square-Off)"
+                                      >
+                                        + Set SL
+                                      </button>
+                                    )}
+
+                                    {pos.targetPrice ? (
+                                      <button
+                                        onClick={() => handleOpenModifyModal(pos)}
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 transition-all cursor-pointer shadow-xs"
+                                        title={`Target Price: ₹${pos.targetPrice.toFixed(2)}. Position will auto square-off immediately when touched.`}
+                                      >
+                                        <span className="font-bold">Tgt:</span>
+                                        <span>₹{pos.targetPrice.toFixed(2)}</span>
+                                        {tgtDistance !== null && (
+                                          <span className="text-[9px] font-bold opacity-80">
+                                            ({tgtDistance > 0 ? '+' : ''}{tgtDistance.toFixed(1)}%)
+                                          </span>
+                                        )}
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleOpenModifyModal(pos)}
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-mono text-text-muted hover:text-emerald-500 hover:bg-emerald-500/10 border border-dashed border-border-subtle hover:border-emerald-500/30 transition-all cursor-pointer"
+                                        title="Click to set Target (Auto Square-Off)"
+                                      >
+                                        + Set Tgt
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {(pos.stopLoss || pos.targetPrice) && (
+                                    <span className="text-[9px] font-mono text-text-muted flex items-center gap-1">
+                                      <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse" />
+                                      Auto Square-Off Active
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </td>
 
                           {/* Actions */}
@@ -935,6 +1015,27 @@ export const PaperTradingPage: React.FC = () => {
                             >
                               {ord.status}
                             </Badge>
+                            {ord.exitReason === 'TARGET' && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                  🎯 TARGET HIT
+                                </span>
+                              </div>
+                            )}
+                            {ord.exitReason === 'STOP_LOSS' && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                  🛑 SL HIT
+                                </span>
+                              </div>
+                            )}
+                            {ord.exitReason === 'AUTO_SQUARE_OFF' && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                  ⚡ AUTO SQ-OFF
+                                </span>
+                              </div>
+                            )}
                           </td>
 
                           {/* Actions: View Contract Note */}
@@ -995,7 +1096,162 @@ export const PaperTradingPage: React.FC = () => {
       )}
 
       {/* ======================================================== */}
-      {/* TAB 4: FUNDS, MARGINS & TAX LEDGER                       */}
+      {/* TAB 4: CLOSED TRADES & AUTO SQUARE-OFF AUDIT LOG         */}
+      {/* ======================================================== */}
+      {activeTab === 'history' && (
+        <div className="space-y-4">
+          {closedPaperTrades.length === 0 ? (
+            <div className="p-12 text-center rounded-3xl bg-bg-card border border-border-subtle space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-bg-secondary text-text-muted mx-auto flex items-center justify-center">
+                <History className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-bold text-text-primary">No Closed Trades Yet</h3>
+              <p className="text-xs text-text-muted max-w-sm mx-auto">
+                Trades that exit manually or via Auto Square-Off (Target or Stop Loss) will be recorded here with realized P&L and execution audit reasons.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-3xl bg-bg-card border border-border-subtle shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-bg-elevated/70 border-b border-border-subtle text-text-muted text-[11px] uppercase tracking-wider font-semibold">
+                      <th className="p-3.5">Instrument</th>
+                      <th className="p-3.5">Side</th>
+                      <th className="p-3.5">Product</th>
+                      <th className="p-3.5 text-right">Qty</th>
+                      <th className="p-3.5 text-right">Entry Price</th>
+                      <th className="p-3.5 text-right">Exit Price</th>
+                      <th className="p-3.5 text-right">Charges</th>
+                      <th className="p-3.5 text-right">Net Realized P&L</th>
+                      <th className="p-3.5 text-center">Exit Trigger</th>
+                      <th className="p-3.5 text-right">Closed At</th>
+                      <th className="p-3.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-subtle/50">
+                    {closedPaperTrades.map(trade => {
+                      const isProfit = trade.netPnL >= 0;
+
+                      return (
+                        <tr key={trade.id} className="hover:bg-bg-elevated/30 transition-colors">
+                          {/* Instrument */}
+                          <td className="p-3.5 whitespace-nowrap">
+                            <div className="font-bold text-text-primary text-sm">{trade.stockSymbol}</div>
+                            <div className="text-[10px] text-text-muted">{trade.stockName}</div>
+                          </td>
+
+                          {/* Side */}
+                          <td className="p-3.5 whitespace-nowrap">
+                            <Badge variant={trade.direction === 'BUY' ? 'positive' : 'negative'} size="sm">
+                              {trade.direction}
+                            </Badge>
+                          </td>
+
+                          {/* Product */}
+                          <td className="p-3.5 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-bg-secondary text-text-secondary border border-border-subtle font-semibold">
+                              {trade.productType === 'INTRADAY (MIS)' ? 'MIS (5x)' : 'CNC'}
+                            </span>
+                          </td>
+
+                          {/* Qty */}
+                          <td className="p-3.5 text-right font-mono font-bold text-text-primary whitespace-nowrap">
+                            {trade.quantity}
+                          </td>
+
+                          {/* Entry Price */}
+                          <td className="p-3.5 text-right font-mono text-text-secondary whitespace-nowrap">
+                            ₹{trade.entryPrice.toFixed(2)}
+                          </td>
+
+                          {/* Exit Price */}
+                          <td className="p-3.5 text-right font-mono font-bold text-text-primary whitespace-nowrap">
+                            ₹{trade.exitPrice.toFixed(2)}
+                          </td>
+
+                          {/* Charges */}
+                          <td className="p-3.5 text-right font-mono text-amber-500 whitespace-nowrap">
+                            ₹{trade.charges.toFixed(2)}
+                          </td>
+
+                          {/* Net Realized P&L */}
+                          <td className="p-3.5 text-right whitespace-nowrap font-mono font-bold text-sm">
+                            <span className={isProfit ? 'text-brand-positive' : 'text-brand-negative'}>
+                              {isProfit ? '+₹' : '-₹'}{Math.abs(trade.netPnL).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                            </span>
+                          </td>
+
+                          {/* Exit Trigger / Reason */}
+                          <td className="p-3.5 text-center whitespace-nowrap">
+                            {trade.exitReason === 'TARGET' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                🎯 TARGET HIT
+                              </span>
+                            ) : trade.exitReason === 'STOP_LOSS' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                                🛑 STOP LOSS HIT
+                              </span>
+                            ) : trade.exitReason === 'AUTO_SQUARE_OFF' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                ⚡ AUTO SQ-OFF
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono text-text-muted bg-bg-secondary border border-border-subtle">
+                                MANUAL EXIT
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Closed At */}
+                          <td className="p-3.5 text-right font-mono text-[11px] text-text-muted whitespace-nowrap">
+                            {new Date(trade.closedAt).toLocaleTimeString('en-IN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit'
+                            })}
+                          </td>
+
+                          {/* Actions: Direct Journal Integration */}
+                          <td className="p-3.5 text-right whitespace-nowrap">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              icon={<BookOpen className="w-3.5 h-3.5 text-amber-400" />}
+                              onClick={() => {
+                                openNewTradeModalWithPrefill({
+                                  stockSymbol: trade.stockSymbol,
+                                  stockName: trade.stockName,
+                                  direction: trade.direction,
+                                  quantity: trade.quantity,
+                                  entryPrice: trade.entryPrice,
+                                  exitPrice: trade.exitPrice,
+                                  stopLoss: trade.stopLoss,
+                                  targetPrice: trade.targetPrice,
+                                  holdingMinutes: trade.holdingMinutes,
+                                  status: 'CLOSED',
+                                  isFromPaperTrade: true
+                                });
+                              }}
+                              className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 text-xs"
+                              title="Log to TradeWise Journal"
+                            >
+                              Journal
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: FUNDS, MARGINS & TAX LEDGER                       */}
       {/* ======================================================== */}
       {activeTab === 'funds' && (
         <div className="space-y-6">
