@@ -35,7 +35,7 @@ export const EquityCurveChart: React.FC<EquityCurveChartProps> = ({
     ctx.clearRect(0, 0, width, height);
 
     const isDark = document.documentElement.classList.contains("dark");
-    const textColor = isDark ? "#849884" : "#64748B";
+    const textColor = isDark ? "#849884" : "#1E293B";
 
     const topPadding = 20;
     const bottomPadding = 30;
@@ -167,8 +167,8 @@ export const EquityCurveChart: React.FC<EquityCurveChartProps> = ({
             <span className="text-xs font-extrabold text-text-primary uppercase tracking-wider">
               Account Equity & Growth Trajectory
             </span>
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-positive/15 border border-brand-positive/30 text-brand-positive text-[11px] font-black">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-positive animate-pulse" />
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-brand-positive/15 dark:border-brand-positive/30 dark:text-brand-positive text-[11px] font-black">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-brand-positive animate-pulse" />
               Live Net
             </span>
           </div>

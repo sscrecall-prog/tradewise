@@ -43,7 +43,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
             Rule execution consistency & emotional control
           </p>
         </div>
-        <span className="px-2.5 py-1 rounded-full bg-brand-accent/15 border border-brand-accent/30 text-brand-positive font-black text-xs">
+        <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-brand-accent/15 dark:border-brand-accent/30 dark:text-brand-positive font-black text-xs">
           Top 5% Tier
         </span>
       </div>
@@ -111,7 +111,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
           <span className="text-2xl font-black text-text-primary tracking-tight">
             {score}%
           </span>
-          <span className="text-[10px] font-bold text-brand-positive">
+          <span className="text-[10px] font-bold text-emerald-700 dark:text-brand-positive">
             Consistent Edge
           </span>
         </div>
@@ -124,7 +124,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-brand-accent shadow-lime-sm" />
             <span className="text-text-primary font-medium">Clean Rule Execution</span>
           </div>
-          <span className="font-extrabold text-emerald-600 dark:text-brand-accent font-mono">{promoters}%</span>
+          <span className="font-extrabold text-emerald-700 dark:text-brand-accent font-mono">{promoters}%</span>
         </div>
 
         <div className="flex items-center justify-between p-2 rounded-2xl bg-bg-secondary border border-border-subtle">
@@ -132,7 +132,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
             <span className="w-2.5 h-2.5 rounded-full bg-trade-blue" />
             <span className="text-text-primary font-medium">Controlled Scratches</span>
           </div>
-          <span className="font-extrabold text-trade-blue font-mono">{passives}%</span>
+          <span className="font-extrabold text-sky-700 dark:text-trade-blue font-mono">{passives}%</span>
         </div>
 
         <div className="flex items-center justify-between p-2 rounded-2xl bg-bg-secondary border border-border-subtle">
@@ -140,7 +140,7 @@ export const DisciplineDoughnutChart: React.FC<DisciplineDoughnutChartProps> = (
             <span className="w-2.5 h-2.5 rounded-full bg-brand-negative shadow-coral-glow" />
             <span className="text-text-primary font-medium">Impulsive / FOMO Mistakes</span>
           </div>
-          <span className="font-extrabold text-brand-negative font-mono">{detractors}%</span>
+          <span className="font-extrabold text-rose-700 dark:text-brand-negative font-mono">{detractors}%</span>
         </div>
       </div>
     </div>

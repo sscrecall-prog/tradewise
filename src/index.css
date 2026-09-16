@@ -15,15 +15,15 @@
 }
 
 html.light {
-  --color-bg-primary: #F4F6F9;
+  --color-bg-primary: #F1F5F9;
   --color-bg-secondary: #FFFFFF;
   --color-bg-card: #FFFFFF;
   --color-bg-elevated: #F8FAFC;
   --color-text-primary: #0F172A;
-  --color-text-secondary: #64748B;
-  --color-text-muted: #94A3B8;
-  --color-border: #E2E8F0;
-  --color-accent-lime: #65a30d;
+  --color-text-secondary: #334155;
+  --color-text-muted: #475569;
+  --color-border: #CBD5E1;
+  --color-accent-lime: #16a34a;
 }
 
 body {
@@ -154,66 +154,125 @@ html.light .gradient-lime-bar {
 }
 
 /* ==========================================================================
-   LIGHT MODE CONTRAST & VISIBILITY ENGINE
+   LIGHT MODE CONTRAST & VISIBILITY ENGINE (GLOBAL HIGH-CONTRAST)
    ========================================================================== */
+html.light {
+  color-scheme: light;
+}
+
 html.light .glass-panel,
 html.light .glass-panel-interactive {
   background: #ffffff !important;
-  border-color: #E2E8F0 !important;
+  border-color: #CBD5E1 !important;
   box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04) !important;
 }
 
 html.light .glass-panel-interactive:hover {
-  border-color: #CBD5E1 !important;
+  border-color: #94A3B8 !important;
   box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.12) !important;
 }
 
-/* Global Light Mode text visibility */
-html.light .tradepulse-scope {
-  color: #0F172A;
-}
-
-/* In Light Mode, force high contrast for headings & white/light text */
-html.light .tradepulse-scope .text-white,
-html.light .glass-panel .text-white,
-html.light .glass-panel-interactive .text-white {
+/* Global Light Mode text visibility - High contrast text hierarchy */
+html.light .text-text-primary {
   color: #0F172A !important;
 }
-
-html.light .tradepulse-scope .text-slate-100,
-html.light .glass-panel .text-slate-100,
-html.light .glass-panel-interactive .text-slate-100 {
-  color: #0F172A !important;
-}
-
-html.light .tradepulse-scope .text-slate-200,
-html.light .glass-panel .text-slate-200,
-html.light .glass-panel-interactive .text-slate-200 {
-  color: #1E293B !important;
-}
-
-html.light .tradepulse-scope .text-slate-300,
-html.light .glass-panel .text-slate-300,
-html.light .glass-panel-interactive .text-slate-300 {
+html.light .text-text-secondary {
   color: #334155 !important;
 }
-
-html.light .tradepulse-scope .text-slate-400,
-html.light .glass-panel .text-slate-400,
-html.light .glass-panel-interactive .text-slate-400 {
+html.light .text-text-muted {
   color: #475569 !important;
 }
 
-html.light .tradepulse-scope .text-slate-500,
-html.light .glass-panel .text-slate-500,
-html.light .glass-panel-interactive .text-slate-500 {
-  color: #64748B !important;
+/* Force high contrast for slate colors across all components in light mode */
+html.light .text-slate-100,
+html.light .text-slate-200 {
+  color: #0F172A !important;
+}
+html.light .text-slate-300 {
+  color: #1E293B !important;
+}
+html.light .text-slate-400 {
+  color: #475569 !important;
+}
+html.light .text-slate-500 {
+  color: #334155 !important;
+}
+html.light .text-slate-600 {
+  color: #1E293B !important;
+}
+
+/* Positive / Green contrast engine in Light Mode */
+html.light .text-brand-positive,
+html.light .text-trade-green,
+html.light .text-brand-positiveLight,
+html.light .text-emerald-400,
+html.light .text-emerald-500,
+html.light .text-green-400 {
+  color: #15803D !important; /* Deep Emerald 700 - high contrast 5.3:1 */
+}
+
+/* Negative / Red contrast engine in Light Mode */
+html.light .text-brand-negative,
+html.light .text-trade-red,
+html.light .text-brand-negativeLight,
+html.light .text-rose-400,
+html.light .text-rose-500,
+html.light .text-red-400 {
+  color: #DC2626 !important; /* Rich Crimson Red 600 - high contrast 4.8:1 */
+}
+
+/* Warning / Amber contrast engine in Light Mode */
+html.light .text-brand-warning,
+html.light .text-amber-300,
+html.light .text-amber-400,
+html.light .text-yellow-400 {
+  color: #B45309 !important; /* Rich Amber 700 - high contrast 4.6:1 */
+}
+
+/* Cyan & Blue contrast engine in Light Mode */
+html.light .text-cyan-400,
+html.light .text-cyan-500 {
+  color: #0E7490 !important; /* Cyan 700 */
+}
+html.light .text-blue-400,
+html.light .text-sky-400 {
+  color: #1D4ED8 !important; /* Blue 700 */
+}
+html.light .text-purple-400 {
+  color: #7E22CE !important; /* Purple 700 */
+}
+
+/* Badge and Pill background enhancements in Light Mode */
+html.light .bg-brand-positive\/15,
+html.light .bg-brand-positive\/10,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/10 {
+  background-color: #DCFCE7 !important;
+  border-color: #86EFAC !important;
+}
+html.light .bg-brand-negative\/15,
+html.light .bg-brand-negative\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/10 {
+  background-color: #FEE2E2 !important;
+  border-color: #FCA5A5 !important;
+}
+html.light .bg-brand-accent\/15,
+html.light .bg-brand-accent\/10,
+html.light .bg-brand-accent\/20 {
+  background-color: #DCFCE7 !important;
+  border-color: #86EFAC !important;
+}
+html.light .bg-brand-warning\/15,
+html.light .bg-amber-500\/15 {
+  background-color: #FEF3C7 !important;
+  border-color: #FCD34D !important;
 }
 
 /* Headings in Light Mode */
-html.light .tradepulse-scope h1,
-html.light .tradepulse-scope h2,
-html.light .tradepulse-scope h3 {
+html.light h1,
+html.light h2,
+html.light h3 {
   color: #0F172A !important;
 }
 

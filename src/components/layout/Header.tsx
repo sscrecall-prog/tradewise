@@ -242,8 +242,8 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Center: Signature Floating Pill Navigation Dock */}
-      <nav className="hidden xl:flex items-center gap-1 bg-bg-secondary border border-border-subtle p-1 rounded-full shadow-sm">
+      {/* Center: Signature Floating Pill Navigation Dock (Shown on 2xl screens to avoid clipping controls on laptops) */}
+      <nav className="hidden 2xl:flex items-center gap-1 bg-bg-secondary border border-border-subtle p-1 rounded-full shadow-sm">
         {navPills.map(tab => {
           const isActive = activeTab === tab.id;
           return (
@@ -263,25 +263,25 @@ export const Header: React.FC = () => {
         })}
       </nav>
 
-      {/* Right Controls: AI Assistant, Download Report, Live Status, CTAs */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
+      {/* Right Controls: AI Assistant, Scalp Sniper, Tilt Lock, Live Status, Theme & Profile */}
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         {/* "Download Report" Pill Button */}
         <button
           onClick={handleDownloadReport}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-secondary hover:bg-bg-elevated text-text-secondary hover:text-text-primary border border-border-subtle text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+          className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-secondary hover:bg-bg-elevated text-text-secondary hover:text-text-primary border border-border-subtle text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm flex-shrink-0"
           title="Download trade journal data as CSV"
         >
           <Download className="w-3.5 h-3.5 text-text-muted" />
-          <span className="hidden lg:inline">Download Report</span>
+          <span>Report</span>
         </button>
 
-        {/* "10-30m Scalp Sniper" Pill Button */}
+        {/* "10-30m Scalp Sniper" Pill Button (High Contrast in Light Mode) */}
         <button
           onClick={() => setIsScalpSniperModalOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 font-extrabold text-xs border border-amber-500/40 shadow-sm shadow-amber-500/15 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300 dark:bg-gradient-to-r dark:from-amber-500/20 dark:to-yellow-500/20 dark:hover:from-amber-500/30 dark:hover:to-yellow-500/30 dark:text-amber-300 dark:border-amber-500/40 font-black text-xs border shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
           title="10-30 Min Scalp Sniper (₹1L Capital Blueprint & Asymmetric 1:2 R:R)"
         >
-          <Zap className="w-3.5 h-3.5 fill-current text-amber-400" />
+          <Zap className="w-3.5 h-3.5 fill-current text-amber-700 dark:text-amber-400" />
           <span className="hidden md:inline">10-30m Sniper</span>
           <span className="md:hidden">Sniper</span>
         </button>
@@ -289,11 +289,11 @@ export const Header: React.FC = () => {
         {/* "AI Assistant" Pill Button */}
         <button
           onClick={() => setActiveTab("tradepulse")}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-accent hover:bg-brand-accentHover text-dark-950 font-black text-xs shadow-md shadow-lime-400/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-accent hover:bg-brand-accentHover text-dark-950 font-black text-xs shadow-md shadow-lime-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex-shrink-0"
           title="Open AI Decision & NIFTY 50 Analysis Platform"
         >
           <Sparkles className="w-3.5 h-3.5 fill-dark-950" />
-          <span>AI Assistant</span>
+          <span className="hidden sm:inline">AI Assistant</span>
         </button>
 
         {/* Prop-Desk Tilt Lock Indicator & Trigger */}

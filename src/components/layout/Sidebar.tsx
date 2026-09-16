@@ -140,6 +140,24 @@ export const Sidebar: React.FC = () => {
     }
   };
 
+  const getBadgeStyle = (id: string, isActive: boolean) => {
+    if (isActive) return "bg-dark-950/20 text-dark-950";
+    switch (id) {
+      case "derivatives":
+        return "bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30";
+      case "time-mae":
+        return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-brand-positive border border-emerald-200 dark:border-emerald-500/30";
+      case "fii-dii":
+        return "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-500/30";
+      case "tilt-lock":
+        return "bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30";
+      case "tradepulse":
+        return "bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30";
+      default:
+        return "bg-emerald-100 dark:bg-brand-accent/15 text-emerald-800 dark:text-brand-positive border border-emerald-200 dark:border-brand-accent/20";
+    }
+  };
+
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -180,7 +198,7 @@ export const Sidebar: React.FC = () => {
 
         {/* Mobile Nav Items */}
         <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">
-          <div className="px-3 pb-2 text-[10px] font-bold text-text-muted uppercase tracking-wider">
+          <div className="px-3 pb-2 text-[10px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
             Core Modules
           </div>
           {mainNavItems.map(item => {
@@ -201,9 +219,7 @@ export const Sidebar: React.FC = () => {
                 </div>
                 {item.badge && (
                   <span
-                    className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${
-                      isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-positive"
-                    }`}
+                    className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${getBadgeStyle(item.id, isActive)}`}
                   >
                     {item.badge}
                   </span>
@@ -212,7 +228,7 @@ export const Sidebar: React.FC = () => {
             );
           })}
 
-          <div className="pt-4 px-3 pb-2 text-[10px] font-bold text-text-muted uppercase tracking-wider">
+          <div className="pt-4 px-3 pb-2 text-[10px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
             System
           </div>
           {secondaryNavItems.map(item => {
@@ -240,7 +256,7 @@ export const Sidebar: React.FC = () => {
         <div className="p-4 border border-border-subtle bg-bg-card m-3 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
-            <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
+            <span className="text-xs font-black text-emerald-700 dark:text-brand-positive">{discipline.overallScore}/100</span>
           </div>
           <div className="w-full bg-bg-elevated h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-border-subtle">
             <div
@@ -365,7 +381,7 @@ export const Sidebar: React.FC = () => {
         {/* Navigation Items */}
         <div className="flex-1 overflow-y-auto px-2 py-4 space-y-1.5 custom-scrollbar overflow-x-hidden">
           {!isSidebarCollapsed && (
-            <div className="px-3 pb-2 text-[10px] font-bold text-text-muted uppercase tracking-wider">
+            <div className="px-3 pb-2 text-[10px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
               Core Modules
             </div>
           )}
@@ -400,9 +416,7 @@ export const Sidebar: React.FC = () => {
 
                   {!isSidebarCollapsed && item.badge && (
                     <span
-                      className={`px-2 py-0.5 text-[10px] rounded-full font-bold whitespace-nowrap ${
-                        isActive ? "bg-dark-950/20 text-dark-950" : "bg-brand-accent/15 text-brand-positive"
-                      }`}
+                      className={`px-2 py-0.5 text-[10px] rounded-full font-bold whitespace-nowrap ${getBadgeStyle(item.id, isActive)}`}
                     >
                       {item.badge}
                     </span>
@@ -475,7 +489,7 @@ export const Sidebar: React.FC = () => {
             <div className="p-4 border border-border-subtle bg-bg-card m-3 rounded-2xl shadow-sm">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
-                <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
+                <span className="text-xs font-black text-emerald-700 dark:text-brand-positive">{discipline.overallScore}/100</span>
               </div>
               <div className="w-full bg-bg-elevated h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-border-subtle">
                 <div
@@ -507,7 +521,7 @@ export const Sidebar: React.FC = () => {
                     <div className="text-xs font-black text-text-primary group-hover:text-brand-accent transition-colors truncate">
                       {profile.name || "Trader Profile"}
                     </div>
-                    <div className="text-[10px] text-brand-positive font-mono font-bold">Pro Terminal</div>
+                    <div className="text-[10px] text-emerald-700 dark:text-brand-positive font-mono font-bold">Pro Terminal</div>
                   </div>
                 </div>
                 <Settings className="w-4 h-4 text-text-muted group-hover:text-brand-accent transition-colors flex-shrink-0" />

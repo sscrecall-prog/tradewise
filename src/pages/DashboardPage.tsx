@@ -80,14 +80,14 @@ export const DashboardPage: React.FC = () => {
             className="p-3.5 rounded-3xl bg-bg-card border border-border-subtle hover:border-brand-accent/50 cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-card-glow flex flex-col justify-between group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-text-secondary group-hover:text-text-primary transition-colors">
+              <span className="text-xs font-black text-text-primary group-hover:text-brand-accent transition-colors">
                 {idx.name}
               </span>
               <span
                 className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                   idx.isPositive
-                    ? "bg-brand-positive/15 text-brand-positive border border-brand-positive/30"
-                    : "bg-brand-negative/15 text-brand-negative border border-brand-negative/30"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-brand-positive/15 dark:text-brand-positive dark:border-brand-positive/30"
+                    : "bg-rose-100 text-rose-800 border-rose-300 dark:bg-brand-negative/15 dark:text-brand-negative dark:border-brand-negative/30"
                 }`}
               >
                 {idx.isPositive ? "+" : ""}{idx.changePercent}%
@@ -99,7 +99,7 @@ export const DashboardPage: React.FC = () => {
               </div>
               <div
                 className={`text-[11px] font-bold ${
-                  idx.isPositive ? "text-brand-positive" : "text-brand-negative"
+                  idx.isPositive ? "text-emerald-700 dark:text-brand-positive" : "text-rose-700 dark:text-brand-negative"
                 }`}
               >
                 {idx.isPositive ? "+" : ""}{idx.change.toFixed(2)}
@@ -115,7 +115,7 @@ export const DashboardPage: React.FC = () => {
         <div className="card-ivory-highlight p-5 flex flex-col justify-between rounded-3xl">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-black text-text-muted uppercase tracking-wider">
+              <span className="text-[11px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
                 Today's Realized Net P&L
               </span>
               <div className="text-2xl sm:text-3xl font-black text-text-primary mt-1 tracking-tight">
@@ -128,7 +128,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-xs text-text-secondary font-medium">
-            <span>vs yesterday (+₹2,450)</span>
+            <span className="font-semibold text-text-secondary">vs yesterday (+₹2,450)</span>
             <span className="font-bold text-text-primary">{todayTradesCount} Trades logged</span>
           </div>
         </div>
@@ -137,31 +137,31 @@ export const DashboardPage: React.FC = () => {
         <div className="p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+              <span className="text-[11px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
                 Operating Friction / Taxes
               </span>
               <div className="text-2xl sm:text-3xl font-black text-text-primary mt-1 tracking-tight">
                 ₹{analytics.totalCharges.toLocaleString("en-IN")}
               </div>
             </div>
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-negative/15 border border-brand-negative/30 text-brand-negative text-xs font-black">
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 dark:bg-brand-negative/15 dark:border-brand-negative/30 dark:text-brand-negative text-xs font-black">
               <ArrowDownRight className="w-3.5 h-3.5 stroke-[3]" />
               <span>-4.8%</span>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-xs text-text-muted">
+          <div className="mt-4 pt-3 border-t border-border-subtle flex items-center justify-between text-xs text-text-secondary font-medium">
             <span>STT & Brokerage impact</span>
-            <span className="text-brand-positive font-bold">Under Limit</span>
+            <span className="text-emerald-700 dark:text-brand-positive font-bold">Under Limit</span>
           </div>
         </div>
 
         {/* Card 3: 2x2 Strategy Setups Grid */}
         <div className="p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+            <span className="text-[11px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
               Top Edge Setups
             </span>
-            <span className="text-[10px] font-extrabold text-brand-accent bg-brand-accent/15 px-2 py-0.5 rounded-full border border-brand-accent/20">
+            <span className="text-[10px] font-extrabold text-emerald-800 dark:text-brand-accent bg-emerald-100 dark:bg-brand-accent/15 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-brand-accent/20">
               Win Rate
             </span>
           </div>
@@ -173,10 +173,10 @@ export const DashboardPage: React.FC = () => {
                 className="p-2 rounded-2xl bg-bg-secondary border border-border-subtle flex items-center justify-between"
               >
                 <div className="leading-tight">
-                  <div className="text-[11px] font-bold text-text-secondary">{s.name}</div>
+                  <div className="text-[11px] font-bold text-text-primary">{s.name}</div>
                   <div className="text-xs font-black text-text-primary">{s.winRate}%</div>
                 </div>
-                <div className="w-5 h-5 rounded-full bg-brand-accent/15 flex items-center justify-center text-brand-accent">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-brand-accent/15 flex items-center justify-center text-emerald-700 dark:text-brand-accent">
                   <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
                 </div>
               </div>
@@ -188,14 +188,14 @@ export const DashboardPage: React.FC = () => {
         <div className="p-5 rounded-3xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-card-glow flex flex-col justify-between">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+              <span className="text-[11px] font-black text-text-secondary dark:text-text-muted uppercase tracking-wider">
                 Annual Profit Target
               </span>
               <div className="text-2xl sm:text-3xl font-black text-text-primary mt-1 tracking-tight">
                 {targetPct}%
               </div>
             </div>
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-brand-accent/15 text-brand-accent border border-brand-accent/30 text-xs font-black">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 dark:bg-brand-accent/15 text-emerald-800 dark:text-brand-accent border border-emerald-300 dark:border-brand-accent/30 text-xs font-black">
               <span>Goal</span>
             </div>
           </div>
@@ -207,9 +207,9 @@ export const DashboardPage: React.FC = () => {
                 style={{ width: `${targetPct}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-text-muted">
-              <span>₹{currentAccumulated.toLocaleString("en-IN")}</span>
-              <span className="font-bold text-text-secondary">₹{annualTarget.toLocaleString("en-IN")}</span>
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold text-text-primary">₹{currentAccumulated.toLocaleString("en-IN")}</span>
+              <span className="font-black text-text-primary">₹{annualTarget.toLocaleString("en-IN")}</span>
             </div>
           </div>
         </div>
@@ -238,28 +238,28 @@ export const DashboardPage: React.FC = () => {
           {/* Quick Metrics Strip below Chart */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
             <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
-              <span className="text-[10px] font-bold text-text-muted uppercase">Gross Profit</span>
-              <span className="text-sm font-black text-brand-positive mt-0.5">
+              <span className="text-[10px] font-black text-text-secondary dark:text-text-muted uppercase">Gross Profit</span>
+              <span className="text-sm font-black text-emerald-700 dark:text-brand-positive mt-0.5">
                 +₹{analytics.grossPnL.toLocaleString("en-IN")}
               </span>
             </div>
 
             <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
-              <span className="text-[10px] font-bold text-text-muted uppercase">Win Rate</span>
+              <span className="text-[10px] font-black text-text-secondary dark:text-text-muted uppercase">Win Rate</span>
               <span className="text-sm font-black text-text-primary mt-0.5">
                 {analytics.winRate}% ({analytics.winningTrades}W / {analytics.losingTrades}L)
               </span>
             </div>
 
             <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
-              <span className="text-[10px] font-bold text-text-muted uppercase">Profit Factor</span>
-              <span className="text-sm font-black text-brand-accent mt-0.5">
+              <span className="text-[10px] font-black text-text-secondary dark:text-text-muted uppercase">Profit Factor</span>
+              <span className="text-sm font-black text-emerald-700 dark:text-brand-positive mt-0.5">
                 {analytics.profitFactor.toFixed(2)}
               </span>
             </div>
 
             <div className="p-3 rounded-2xl bg-bg-card border border-border-subtle shadow-sm dark:shadow-none flex flex-col">
-              <span className="text-[10px] font-bold text-text-muted uppercase">Expectancy</span>
+              <span className="text-[10px] font-black text-text-secondary dark:text-text-muted uppercase">Expectancy</span>
               <span className="text-sm font-black text-text-primary mt-0.5">
                 +₹{analytics.expectancy} / trade
               </span>
