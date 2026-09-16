@@ -1,10 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/api/market",
-      "destination": "/api/market"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
