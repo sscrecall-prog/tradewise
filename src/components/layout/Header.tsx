@@ -343,39 +343,57 @@ export const Header: React.FC = () => {
           <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-brand-accent" : ""}`} />
         </button>
 
-        {/* Theme Toggle */}
+        {/* Theme Toggle (High-Contrast & Always Distinct) */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full bg-bg-secondary border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors shadow-sm"
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer flex-shrink-0 ${
+            theme === "dark"
+              ? "bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 border-amber-500/50 shadow-amber-500/20"
+              : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-300 shadow-indigo-500/15"
+          }`}
           aria-label="Toggle theme"
-          title={theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
+          title={theme === "dark" ? "Dark Mode is Active • Click to switch to Light Mode" : "Light Mode is Active • Click to switch to Dark Mode"}
         >
-          {theme === "dark" ? <Sun className="w-3.5 h-3.5 text-brand-accent" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
+          {theme === "dark" ? (
+            <>
+              <Sun className="w-4 h-4 text-amber-400 fill-amber-400/80 animate-pulse" />
+              <span className="text-[11px] font-black uppercase tracking-wider hidden sm:inline">Dark</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-4 h-4 text-indigo-600 fill-indigo-600/80" />
+              <span className="text-[11px] font-black uppercase tracking-wider hidden sm:inline">Light</span>
+            </>
+          )}
         </button>
 
         {/* Log Trade CTA */}
         <button
           onClick={() => setIsNewTradeModalOpen(true)}
-          className="hidden sm:flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-dark-950 hover:bg-dark-900 text-white dark:bg-white/10 dark:hover:bg-white/15 dark:text-white border border-transparent dark:border-white/20 text-xs font-bold transition-all active:scale-[0.98] shadow-sm"
+          className="hidden sm:flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-dark-950 hover:bg-dark-900 text-white dark:bg-white/10 dark:hover:bg-white/15 dark:text-white border border-transparent dark:border-white/20 text-xs font-bold transition-all active:scale-[0.98] shadow-sm flex-shrink-0"
         >
           <Plus className="w-3.5 h-3.5 text-brand-accent stroke-[3]" />
           <span>Log Trade</span>
         </button>
 
-        {/* User Profile Pill */}
+        {/* User Profile Button (Visible on ALL devices: Mobile, Tablet, Desktop) */}
         <div
           onClick={() => setActiveTab("settings")}
-          className="cursor-pointer hidden lg:flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-bg-secondary border border-border-subtle hover:border-brand-accent/40 transition-colors shadow-sm"
+          className="cursor-pointer flex items-center gap-2 pl-1 sm:pl-1.5 pr-2 sm:pr-3 py-1 rounded-full bg-bg-secondary border border-border-subtle hover:border-brand-accent/60 hover:bg-bg-elevated transition-all hover:scale-[1.03] active:scale-[0.97] shadow-sm flex-shrink-0"
           title="Trader Profile & Settings"
         >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-accent to-emerald-400 text-dark-950 font-black text-[10px] flex items-center justify-center">
-            {profile.name ? profile.name.slice(0, 2).toUpperCase() : "TR"}
+          <div className="relative flex-shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-lime-300 text-dark-950 font-black text-xs flex items-center justify-center shadow-xs border border-amber-500/40">
+              {profile.name ? profile.name.slice(0, 2).toUpperCase() : "TR"}
+            </div>
+            {/* Online Green Status Dot */}
+            <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-bg-primary" />
           </div>
-          <div className="text-left leading-none">
-            <div className="text-[11px] font-bold text-text-primary truncate max-w-[80px]">
+          <div className="text-left leading-none hidden md:block">
+            <div className="text-[11px] font-black text-text-primary truncate max-w-[90px]">
               {profile.name || "Trader"}
             </div>
-            <div className="text-[9px] text-brand-positive font-mono font-bold">Pro Plan</div>
+            <div className="text-[9px] text-brand-positive font-mono font-bold">Pro Account</div>
           </div>
         </div>
       </div>

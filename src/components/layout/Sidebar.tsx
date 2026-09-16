@@ -22,15 +22,20 @@ import {
   Target,
   Lock,
   Clock,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import { useTheme } from "../../context/ThemeContext";
 import { BrandLogo } from "../common/BrandLogo";
 
 export const Sidebar: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const {
     activeTab,
     setActiveTab,
+    profile,
     discipline,
     journal,
     paperPositions,
@@ -247,6 +252,60 @@ export const Sidebar: React.FC = () => {
             Process &gt; Profits. Stick to your risk rules today.
           </p>
         </div>
+
+        {/* Mobile Profile & Theme Switcher Bar */}
+        <div className="p-3 mx-3 mb-4 rounded-2xl bg-bg-card border border-border-subtle space-y-2.5 shadow-sm">
+          {/* User Profile Summary */}
+          <div
+            onClick={() => {
+              setActiveTab("settings");
+              toggleMobileSidebar();
+            }}
+            className="flex items-center justify-between p-1.5 rounded-xl hover:bg-bg-elevated cursor-pointer transition-colors group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="relative">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-lime-300 text-dark-950 font-black text-xs flex items-center justify-center border border-amber-500/40 shadow-xs">
+                  {profile.name ? profile.name.slice(0, 2).toUpperCase() : "TR"}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-bg-card" />
+              </div>
+              <div>
+                <div className="text-xs font-black text-text-primary group-hover:text-brand-accent transition-colors">
+                  {profile.name || "Trader Profile"}
+                </div>
+                <div className="text-[10px] text-text-muted font-medium">Pro Terminal • Settings</div>
+              </div>
+            </div>
+            <Settings className="w-4 h-4 text-text-muted group-hover:text-brand-accent transition-colors" />
+          </div>
+
+          {/* Theme Mode Segmented Switch */}
+          <div className="flex items-center p-1 rounded-xl bg-bg-elevated border border-border-subtle text-xs font-bold">
+            <button
+              onClick={() => theme !== "light" && toggleTheme()}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${
+                theme === "light"
+                  ? "bg-white text-indigo-700 shadow-sm border border-indigo-200 font-extrabold"
+                  : "text-text-muted hover:text-text-primary"
+              }`}
+            >
+              <Sun className="w-3.5 h-3.5" />
+              <span>Light Mode</span>
+            </button>
+            <button
+              onClick={() => theme !== "dark" && toggleTheme()}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${
+                theme === "dark"
+                  ? "bg-amber-500/20 text-amber-300 shadow-sm border border-amber-500/40 font-extrabold"
+                  : "text-text-muted hover:text-text-primary"
+              }`}
+            >
+              <Moon className="w-3.5 h-3.5" />
+              <span>Dark Mode</span>
+            </button>
+          </div>
+        </div>
       </aside>
 
       {/* Desktop Collapsible Sidebar */}
@@ -412,35 +471,122 @@ export const Sidebar: React.FC = () => {
 
         {/* Bottom Discipline Card */}
         {!isSidebarCollapsed ? (
-          <div className="p-4 border border-border-subtle bg-bg-card m-3 rounded-2xl shadow-sm">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
-              <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
+          <>
+            <div className="p-4 border border-border-subtle bg-bg-card m-3 rounded-2xl shadow-sm">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-text-secondary">Discipline Score</span>
+                <span className="text-xs font-black text-brand-positive">{discipline.overallScore}/100</span>
+              </div>
+              <div className="w-full bg-bg-elevated h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-border-subtle">
+                <div
+                  className="gradient-lime-bar h-full rounded-full transition-all duration-500 shadow-sm"
+                  style={{ width: `${discipline.overallScore}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-text-muted leading-tight">
+                Process &gt; Profits. Stick to your risk rules today.
+              </p>
             </div>
-            <div className="w-full bg-bg-elevated h-2 rounded-full overflow-hidden mb-2 p-0.5 border border-border-subtle">
-              <div
-                className="gradient-lime-bar h-full rounded-full transition-all duration-500 shadow-sm"
-                style={{ width: `${discipline.overallScore}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-text-muted leading-tight">
-              Process &gt; Profits. Stick to your risk rules today.
-            </p>
-          </div>
-        ) : (
-          <div
-            onClick={() => setActiveTab("psychology")}
-            className="p-2.5 mx-auto mb-4 rounded-2xl bg-bg-card border border-border-subtle cursor-pointer hover:border-brand-accent/40 transition-colors flex flex-col items-center group relative shadow-sm"
-            title={`Discipline Score: ${discipline.overallScore}/100`}
-          >
-            <ShieldAlert className="w-4 h-4 text-brand-positive" />
-            <span className="text-[10px] font-black text-brand-positive mt-1">
-              {discipline.overallScore}
-            </span>
 
-            {/* Tooltip */}
-            <div className="absolute left-full ml-3 bottom-2 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-              Discipline Score: {discipline.overallScore}/100
+            {/* Desktop Profile & Theme Bar */}
+            <div className="p-3 mx-3 mb-4 rounded-2xl bg-bg-card border border-border-subtle space-y-2.5 shadow-sm">
+              {/* User Profile Summary */}
+              <div
+                onClick={() => setActiveTab("settings")}
+                className="flex items-center justify-between p-1.5 rounded-xl hover:bg-bg-elevated cursor-pointer transition-colors group"
+                title="Open Trader Profile & Settings"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-lime-300 text-dark-950 font-black text-xs flex items-center justify-center border border-amber-500/40 shadow-xs">
+                      {profile.name ? profile.name.slice(0, 2).toUpperCase() : "TR"}
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-bg-card" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black text-text-primary group-hover:text-brand-accent transition-colors truncate">
+                      {profile.name || "Trader Profile"}
+                    </div>
+                    <div className="text-[10px] text-brand-positive font-mono font-bold">Pro Terminal</div>
+                  </div>
+                </div>
+                <Settings className="w-4 h-4 text-text-muted group-hover:text-brand-accent transition-colors flex-shrink-0" />
+              </div>
+
+              {/* Desktop Theme Mode Switch */}
+              <div className="flex items-center p-1 rounded-xl bg-bg-elevated border border-border-subtle text-xs font-bold">
+                <button
+                  onClick={() => theme !== "light" && toggleTheme()}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${
+                    theme === "light"
+                      ? "bg-white text-indigo-700 shadow-sm border border-indigo-200 font-extrabold"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                  title="Switch to Light Theme"
+                >
+                  <Sun className="w-3.5 h-3.5" />
+                  <span>Light</span>
+                </button>
+                <button
+                  onClick={() => theme !== "dark" && toggleTheme()}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-all ${
+                    theme === "dark"
+                      ? "bg-amber-500/20 text-amber-300 shadow-sm border border-amber-500/40 font-extrabold"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                  title="Switch to Dark Theme"
+                >
+                  <Moon className="w-3.5 h-3.5" />
+                  <span>Dark</span>
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-2 mb-4">
+            {/* Discipline Score Icon */}
+            <div
+              onClick={() => setActiveTab("psychology")}
+              className="p-2 rounded-2xl bg-bg-card border border-border-subtle cursor-pointer hover:border-brand-accent/40 transition-colors flex flex-col items-center group relative shadow-sm"
+              title={`Discipline Score: ${discipline.overallScore}/100`}
+            >
+              <ShieldAlert className="w-4 h-4 text-brand-positive" />
+              <span className="text-[9px] font-black text-brand-positive mt-0.5">
+                {discipline.overallScore}
+              </span>
+              <div className="absolute left-full ml-3 bottom-0 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                Discipline Score: {discipline.overallScore}/100
+              </div>
+            </div>
+
+            {/* Collapsed Theme Toggle Icon */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-2xl border transition-all cursor-pointer group relative shadow-sm ${
+                theme === "dark"
+                  ? "bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25"
+                  : "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+              }`}
+              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400 fill-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600 fill-indigo-600" />}
+              <div className="absolute left-full ml-3 bottom-0 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              </div>
+            </button>
+
+            {/* Collapsed Profile Avatar */}
+            <div
+              onClick={() => setActiveTab("settings")}
+              className="p-1 rounded-full bg-bg-card border border-border-subtle cursor-pointer hover:border-brand-accent/60 transition-colors group relative shadow-sm"
+              title="Trader Profile & Settings"
+            >
+              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-400 to-lime-300 text-dark-950 font-black text-[10px] flex items-center justify-center border border-amber-500/40">
+                {profile.name ? profile.name.slice(0, 2).toUpperCase() : "TR"}
+              </div>
+              <div className="absolute left-full ml-3 bottom-0 px-3 py-1.5 rounded-xl bg-dark-950 text-white text-xs font-bold border border-border-subtle shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                Profile: {profile.name || "Trader"} (Settings)
+              </div>
             </div>
           </div>
         )}
