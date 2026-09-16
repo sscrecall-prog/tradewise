@@ -89,7 +89,8 @@ export const WatchlistPage: React.FC = () => {
     searchAllIndianStocks,
     fetchAndAddQuote,
     isLiveConnected,
-    lastLiveUpdate
+    lastLiveUpdate,
+    marketStatus
   } = useMarketData();
 
   // Multi-watchlist state with LocalStorage persistence
@@ -302,9 +303,17 @@ export const WatchlistPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="accent" size="sm">Multi-Watchlist Terminal</Badge>
-            <span className="text-xs text-text-muted">
-              {isLiveConnected ? `NSE/BSE Live Synced • ${lastLiveUpdate}` : "Connecting..."}
-            </span>
+            {marketStatus.isOpen ? (
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                NSE/BSE Live Synced • {lastLiveUpdate || "Connecting..."}
+              </span>
+            ) : (
+              <span className="text-xs text-rose-500 dark:text-rose-400 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                Market Closed • Prices Frozen ({marketStatus.timeUntilNext})
+              </span>
+            )}
           </div>
           <h2 className="text-xl font-extrabold text-text-primary tracking-tight">
             Professional Trading Watchlists

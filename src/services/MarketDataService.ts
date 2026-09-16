@@ -1407,6 +1407,11 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
   applyMicroTick(quotes: MarketQuote[]): MarketQuote[] {
     if (!quotes || quotes.length === 0) return quotes;
 
+    // Market Closed Protection: Freeze prices at official NSE closing values when market is closed
+    if (!this.isMarketOpen().isOpen) {
+      return quotes;
+    }
+
     const updated = quotes.map(quote => {
       // 65% chance of a tick every second for natural market ebb and flow
       if (Math.random() > 0.65) return quote;
@@ -1628,47 +1633,67 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
   }
 
   isMarketOpen(): { isOpen: boolean; status: string; nextEvent: string; timeUntilNext: string } {
-    const now = new Date();
-    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000;
-    const istTime = new Date(utcTime + 3600000 * 5.5);
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'short',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+      }).formatToParts(new Date());
 
-    const day = istTime.getDay();
-    const hours = istTime.getHours();
-    const minutes = istTime.getMinutes();
-    const currentTotalMinutes = hours * 60 + minutes;
+      const partMap: Record<string, string> = {};
+      for (const p of parts) {
+        partMap[p.type] = p.value;
+      }
 
-    const marketOpenMinutes = 9 * 60 + 15;
-    const marketCloseMinutes = 15 * 60 + 30;
+      const weekdayStr = partMap.weekday || '';
+      // NSE Trading days: Monday to Friday
+      const isWeekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(weekdayStr);
+      const hours = parseInt(partMap.hour || '0', 10);
+      const minutes = parseInt(partMap.minute || '0', 10);
+      const currentTotalMinutes = hours * 60 + minutes;
 
-    const isWeekday = day >= 1 && day <= 5;
-    const isDuringHours = currentTotalMinutes >= marketOpenMinutes && currentTotalMinutes < marketCloseMinutes;
-    const isOpen = isWeekday && isDuringHours;
+      const marketOpenMinutes = 9 * 60 + 15; // 09:15 AM IST
+      const marketCloseMinutes = 15 * 60 + 30; // 03:30 PM IST
 
-    let status = isOpen ? 'MARKET OPEN (LIVE)' : 'MARKET CLOSED';
-    let nextEvent = '';
-    let timeUntilNext = '';
+      const isDuringHours = currentTotalMinutes >= marketOpenMinutes && currentTotalMinutes < marketCloseMinutes;
+      const isOpen = isWeekday && isDuringHours;
 
-    if (isOpen) {
-      const remainingMinutes = marketCloseMinutes - currentTotalMinutes;
-      const rh = Math.floor(remainingMinutes / 60);
-      const rm = remainingMinutes % 60;
-      nextEvent = 'Closes at 03:30 PM IST';
-      timeUntilNext = `${rh}h ${rm}m left`;
-    } else {
-      nextEvent = 'Opens at 09:15 AM IST';
-      if (!isWeekday) {
-        timeUntilNext = 'Opens Monday';
-      } else if (currentTotalMinutes < marketOpenMinutes) {
-        const remainingMinutes = marketOpenMinutes - currentTotalMinutes;
+      let status = isOpen ? 'MARKET OPEN (LIVE)' : 'MARKET CLOSED';
+      let nextEvent = '';
+      let timeUntilNext = '';
+
+      if (isOpen) {
+        const remainingMinutes = marketCloseMinutes - currentTotalMinutes;
         const rh = Math.floor(remainingMinutes / 60);
         const rm = remainingMinutes % 60;
-        timeUntilNext = `Opens in ${rh}h ${rm}m`;
+        nextEvent = 'Closes at 03:30 PM IST';
+        timeUntilNext = `${rh}h ${rm}m left`;
       } else {
-        timeUntilNext = 'Opens tomorrow 09:15 AM';
+        nextEvent = 'Opens at 09:15 AM IST';
+        if (!isWeekday) {
+          timeUntilNext = 'Opens Monday 09:15 AM';
+        } else if (currentTotalMinutes < marketOpenMinutes) {
+          const remainingMinutes = marketOpenMinutes - currentTotalMinutes;
+          const rh = Math.floor(remainingMinutes / 60);
+          const rm = remainingMinutes % 60;
+          timeUntilNext = `Opens in ${rh}h ${rm}m`;
+        } else {
+          timeUntilNext = 'Opens tomorrow 09:15 AM';
+        }
       }
-    }
 
-    return { isOpen, status, nextEvent, timeUntilNext };
+      return { isOpen, status, nextEvent, timeUntilNext };
+    } catch {
+      return {
+        isOpen: false,
+        status: 'MARKET CLOSED',
+        nextEvent: 'Opens at 09:15 AM IST',
+        timeUntilNext: 'Opens tomorrow 09:15 AM'
+      };
+    }
   }
 
   private getFallbackIndex(symbol: string, name: string): IndexData {

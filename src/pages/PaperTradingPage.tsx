@@ -47,7 +47,7 @@ export const PaperTradingPage: React.FC = () => {
     openNewTradeModalWithPrefill
   } = useApp();
 
-  const { quotes, openStockModal } = useMarketData();
+  const { quotes, openStockModal, marketStatus } = useMarketData();
 
   const [activeTab, setActiveTab] = useState<'positions' | 'holdings' | 'orders' | 'history' | 'funds'>('positions');
   const [closingId, setClosingId] = useState<string | null>(null);
@@ -218,10 +218,17 @@ export const PaperTradingPage: React.FC = () => {
             <Badge variant="neutral" size="sm">
               Official Tax & Charges Engine
             </Badge>
-            <Badge variant="positive" size="sm" className="flex items-center gap-1 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              ⚡ Live Auto Square-Off Active
-            </Badge>
+            {marketStatus.isOpen ? (
+              <Badge variant="positive" size="sm" className="flex items-center gap-1 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                ⚡ Live Auto Square-Off Active
+              </Badge>
+            ) : (
+              <Badge variant="neutral" size="sm" className="flex items-center gap-1 font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                🔒 Market Closed • Closing Prices Locked ({marketStatus.timeUntilNext})
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-text-secondary mt-1">
             Live simulated trading with Angel One & Zerodha Kite execution, real-time brokerage, STT & Electronic Contract Notes.
@@ -563,7 +570,11 @@ export const PaperTradingPage: React.FC = () => {
                           {/* LTP */}
                           <td className="p-3.5 text-right font-mono font-bold text-text-primary whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live stream tick active" />
+                              {marketStatus.isOpen ? (
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live NSE stream tick active" />
+                              ) : (
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" title="Market Closed • Official NSE Closing Price" />
+                              )}
                               <span>₹{pos.currentPrice.toFixed(2)}</span>
                             </div>
                           </td>

@@ -26,6 +26,7 @@ export const TradePulsePage: React.FC = () => {
     indices, 
     isLiveConnected, 
     lastLiveUpdate, 
+    marketStatus,
     refreshData, 
     isLoading: isMarketLoading 
   } = useMarketData();
@@ -293,6 +294,8 @@ export const TradePulsePage: React.FC = () => {
         onOpenPaperModal={() => setIsPaperModalOpen(true)}
         isLiveConnected={isLiveConnected}
         lastLiveUpdate={lastLiveUpdate}
+        isMarketOpen={marketStatus.isOpen}
+        timeUntilNext={marketStatus.timeUntilNext}
         onRefreshLive={refreshData}
         isRefreshing={isMarketLoading}
       />

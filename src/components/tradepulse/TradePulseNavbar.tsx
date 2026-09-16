@@ -28,6 +28,8 @@ export interface TradePulseNavbarProps {
   lastLiveUpdate?: string | null;
   onRefreshLive?: () => void;
   isRefreshing?: boolean;
+  isMarketOpen?: boolean;
+  timeUntilNext?: string;
 }
 
 export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
@@ -45,7 +47,9 @@ export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
   isLiveConnected = false,
   lastLiveUpdate = null,
   onRefreshLive,
-  isRefreshing = false
+  isRefreshing = false,
+  isMarketOpen = true,
+  timeUntilNext = ""
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/95 dark:bg-dark-950/90 backdrop-blur-md border-b border-slate-200 dark:border-dark-800/80 px-4 lg:px-8 py-3 transition-all shadow-sm dark:shadow-none">
@@ -62,14 +66,21 @@ export const TradePulseNavbar: React.FC<TradePulseNavbarProps> = ({
               <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
                 <span className="text-trade-green font-mono">{indexSymbol || 'NIFTY 50'}</span> <span className="bg-gradient-to-r from-trade-green via-emerald-500 to-cyan-500 bg-clip-text text-transparent">Analysis Platform Pro</span>
               </h1>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                isLiveConnected 
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
-                  : 'bg-trade-green-bg text-trade-green border border-trade-green/30'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-trade-green'}`}></span>
-                {isLiveConnected ? 'LIVE NSE FEED' : 'ACTIVE FEED'}
-              </span>
+              {isMarketOpen ? (
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isLiveConnected 
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' 
+                    : 'bg-trade-green-bg text-trade-green border border-trade-green/30'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isLiveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-trade-green'}`}></span>
+                  {isLiveConnected ? 'LIVE NSE FEED' : 'ACTIVE FEED'}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  MARKET CLOSED {timeUntilNext ? `• ${timeUntilNext}` : ''}
+                </span>
+              )}
             </div>
             
             <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-2 font-medium flex-wrap">

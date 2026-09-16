@@ -36,12 +36,7 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [indices, setIndices] = useState<IndexData[]>([]);
   const [isLiveConnected, setIsLiveConnected] = useState(false);
   const [lastLiveUpdate, setLastLiveUpdate] = useState<string | null>(null);
-  const [marketStatus, setMarketStatus] = useState<MarketStatus>({
-    isOpen: true,
-    status: "MARKET OPEN",
-    nextEvent: "Closes at 03:30 PM IST",
-    timeUntilNext: "Open"
-  });
+  const [marketStatus, setMarketStatus] = useState<MarketStatus>(() => MarketDataService.isMarketOpen());
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStockSymbol, setSelectedStockSymbol] = useState<string | null>(null);
 
@@ -77,14 +72,23 @@ export const MarketDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   useEffect(() => {
     loadData();
 
-    // High-frequency live market sync every 2.5 seconds (2,500ms)
+    // High-frequency live market sync every 2.5s when market is OPEN
     const livePollInterval = setInterval(() => {
-      loadData();
+      const current = MarketDataService.isMarketOpen();
+      setMarketStatus(current);
+      if (current.isOpen) {
+        loadData();
+      }
     }, 2500);
 
-    // Continuous 1-second micro-tick stream for ultra-fluid live terminal feedback
+    // Continuous 1-second micro-tick stream: strictly only when market is actively OPEN
+    // When market is closed (after 03:30 PM IST), prices are 100% frozen
     const tickInterval = setInterval(() => {
-      setQuotes(prev => MarketDataService.applyMicroTick(prev));
+      const current = MarketDataService.isMarketOpen();
+      setMarketStatus(current);
+      if (current.isOpen) {
+        setQuotes(prev => MarketDataService.applyMicroTick(prev));
+      }
     }, 1000);
 
     return () => {

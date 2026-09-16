@@ -27,6 +27,7 @@ export const Header: React.FC = () => {
     openStockModal,
     isLiveConnected,
     lastLiveUpdate,
+    marketStatus,
     refreshData,
     isLoading,
     searchAllIndianStocks
@@ -297,18 +298,28 @@ export const Header: React.FC = () => {
           </button>
         )}
 
-        {/* Live Market Connected Badge */}
-        <div
-          className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-bold select-none ${
-            isLiveConnected
-              ? "bg-emerald-500/10 text-emerald-700 dark:text-brand-positive border-emerald-500/30"
-              : "bg-bg-secondary text-text-muted border-border-subtle"
-          }`}
-          title={lastLiveUpdate ? `Live prices synced with NSE at ${lastLiveUpdate}` : "Connecting to NSE..."}
-        >
-          <span className={`w-2 h-2 rounded-full ${isLiveConnected ? "bg-brand-positive animate-pulse" : "bg-text-muted"}`} />
-          <span className="text-[11px]">{isLiveConnected ? "Live NSE" : "Connecting..."}</span>
-        </div>
+        {/* Live Market Connected / Market Closed Badge */}
+        {marketStatus.isOpen ? (
+          <div
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-bold select-none ${
+              isLiveConnected
+                ? "bg-emerald-500/10 text-emerald-700 dark:text-brand-positive border-emerald-500/30"
+                : "bg-bg-secondary text-text-muted border-border-subtle"
+            }`}
+            title={lastLiveUpdate ? `Live prices synced with NSE at ${lastLiveUpdate} • Closes at 03:30 PM IST` : "Connecting to NSE..."}
+          >
+            <span className={`w-2 h-2 rounded-full ${isLiveConnected ? "bg-brand-positive animate-pulse" : "bg-text-muted"}`} />
+            <span className="text-[11px]">{isLiveConnected ? "LIVE NSE" : "Connecting..."}</span>
+          </div>
+        ) : (
+          <div
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-bold select-none bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
+            title={`Indian Stock Market Closed (09:15 AM - 03:30 PM IST). Official closing prices locked. ${marketStatus.timeUntilNext}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="text-[11px] font-black tracking-wide">MARKET CLOSED</span>
+          </div>
+        )}
 
         {/* Manual Refresh Button */}
         <button

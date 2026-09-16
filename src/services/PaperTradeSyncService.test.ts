@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { PaperTradeSyncService } from './PaperTradeSyncService';
 import { MarketDataService } from './MarketDataService';
 import { ClosedPaperTrade, PaperPosition, PaperOrder, MarketQuote } from '../types';
@@ -230,12 +230,46 @@ describe('Live MarketDataService Micro-Tick Engine', () => {
     lastUpdated: '10:00:00 AM'
   };
 
-  it('applies realistic micro-ticks within boundary constraints', () => {
+  it('accurately identifies Indian stock market trading hours and status', () => {
+    const status = MarketDataService.isMarketOpen();
+    expect(status).toHaveProperty('isOpen');
+    expect(status).toHaveProperty('status');
+    expect(status).toHaveProperty('nextEvent');
+    expect(status).toHaveProperty('timeUntilNext');
+    expect(['MARKET OPEN (LIVE)', 'MARKET CLOSED']).toContain(status.status);
+  });
+
+  it('freezes prices completely when market is closed', () => {
+    const spy = vi.spyOn(MarketDataService, 'isMarketOpen').mockReturnValue({
+      isOpen: false,
+      status: 'MARKET CLOSED',
+      nextEvent: 'Opens at 09:15 AM IST',
+      timeUntilNext: 'Opens tomorrow 09:15 AM'
+    });
+
+    const closedQuote: MarketQuote = { ...sampleQuote, price: 1450.50 };
+    const result = MarketDataService.applyMicroTick([closedQuote]);
+    expect(result[0].price).toBe(1450.50);
+    expect(result[0]).toEqual(closedQuote);
+
+    spy.mockRestore();
+  });
+
+  it('applies realistic micro-ticks when market is open', () => {
+    const spy = vi.spyOn(MarketDataService, 'isMarketOpen').mockReturnValue({
+      isOpen: true,
+      status: 'MARKET OPEN (LIVE)',
+      nextEvent: 'Closes at 03:30 PM IST',
+      timeUntilNext: '2h 15m left'
+    });
+
     const ticked = MarketDataService.applyMicroTick([sampleQuote]);
     expect(ticked.length).toBe(1);
     const q = ticked[0];
     expect(q.price).toBeGreaterThan(sampleQuote.prevClose * 0.90);
     expect(q.price).toBeLessThan(sampleQuote.prevClose * 1.10);
     expect(q.sparkline.length).toBeGreaterThan(0);
+
+    spy.mockRestore();
   });
 });
