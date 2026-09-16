@@ -19,6 +19,7 @@ import {
 import { useTheme } from "../../context/ThemeContext";
 import { useMarketData } from "../../context/MarketDataContext";
 import { useApp } from "../../context/AppContext";
+import { BrandLogo } from "../common/BrandLogo";
 
 export const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -137,6 +138,15 @@ export const Header: React.FC = () => {
         >
           <Menu className="w-4 h-4" />
         </button>
+
+        {/* Mobile Brand Emblem */}
+        <div className="md:hidden flex-shrink-0">
+          <BrandLogo
+            size="xs"
+            showText={false}
+            onClick={() => setActiveTab("dashboard")}
+          />
+        </div>
 
         {/* Desktop Sidebar Toggle Button */}
         <button

@@ -23,6 +23,7 @@ import {
   ArrowRight,
   Info
 } from "lucide-react";
+import { BrandLogo } from "../components/common/BrandLogo";
 
 export const SettingsPage: React.FC = () => {
   const {
@@ -450,6 +451,16 @@ export const SettingsPage: React.FC = () => {
             >
               Restore from JSON
             </Button>
+          </div>
+        </div>
+
+        {/* About TradeWise Pro Brand Card */}
+        <div className="p-5 rounded-2xl bg-bg-secondary border border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
+          <BrandLogo size="md" showText={true} />
+          <div className="text-center sm:text-right text-[11px] text-text-muted space-y-0.5">
+            <div className="font-semibold text-text-primary">TradeWise Pro Terminal • v2.4.0</div>
+            <div>NSE &amp; BSE Equity • F&amp;O Derivatives • SEBI Ready</div>
+            <div className="text-brand-positive font-medium">100% Client-Side Private Storage (IndexedDB)</div>
           </div>
         </div>
       </div>

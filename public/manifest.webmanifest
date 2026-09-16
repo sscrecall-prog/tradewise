@@ -1,7 +1,7 @@
 {
-  "name": "TRADEWISE — Indian Stock Market Trading Companion",
-  "short_name": "TRADEWISE",
-  "description": "Learn, Plan, Practice, Journal, Analyze, Improve.",
+  "name": "TRADEWISE Pro — Indian Stock Market Trading Journal & Discipline Companion",
+  "short_name": "TRADEWISE Pro",
+  "description": "Professional Indian Stock Market Trading Journal, F&O Option Chain, Intraday Confluence Edge, Paper Trading & Analytics.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#090A0F",

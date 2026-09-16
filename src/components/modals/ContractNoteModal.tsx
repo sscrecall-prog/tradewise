@@ -4,6 +4,7 @@ import { Button } from "../common/Button";
 import { Badge } from "../common/Badge";
 import { PaperOrder } from "../../types";
 import { Printer, ShieldCheck, Download, CheckCircle2, FileText } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 
 interface ContractNoteModalProps {
   order: PaperOrder | null;
@@ -53,18 +54,21 @@ export const ContractNoteModal: React.FC<ContractNoteModalProps> = ({
     >
       <div className="space-y-6 text-xs text-text-secondary print:text-black">
         {/* Broker Header Box */}
-        <div className="p-4 rounded-2xl bg-bg-secondary border border-border-subtle flex flex-col sm:flex-row justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm text-text-primary tracking-wide">
-                TRADEWISE SECURITIES (INDIA) PVT. LTD.
-              </span>
-              <Badge variant="positive" size="sm">SEBI REG. SIM-INZ000031633</Badge>
+        <div className="p-4 rounded-2xl bg-bg-secondary border border-border-subtle flex flex-col sm:flex-row justify-between gap-4 items-start">
+          <div className="flex items-start gap-3">
+            <BrandLogo size="md" showText={false} />
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-sm text-text-primary tracking-wide">
+                  TRADEWISE SECURITIES (INDIA) PVT. LTD.
+                </span>
+                <Badge variant="positive" size="sm">SEBI REG. SIM-INZ000031633</Badge>
+              </div>
+              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+                Member: National Stock Exchange of India (NSE) & BSE Ltd.<br />
+                SEBI Single Regn No: INZ000031633 • CIN: U67120KA2010PTC054000
+              </p>
             </div>
-            <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
-              Member: National Stock Exchange of India (NSE) & BSE Ltd.<br />
-              SEBI Single Regn No: INZ000031633 • CIN: U67120KA2010PTC054000
-            </p>
           </div>
 
           <div className="text-right sm:text-right space-y-0.5">

@@ -25,6 +25,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+import { BrandLogo } from "../common/BrandLogo";
 
 export const Sidebar: React.FC = () => {
   const {
@@ -154,18 +155,14 @@ export const Sidebar: React.FC = () => {
         {/* Mobile Header with Close Button */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border-subtle">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-accent/15 border border-brand-accent/30 flex items-center justify-center text-brand-accent shadow-sm">
-              <TrendingUp className="w-5 h-5 text-brand-positive" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-text-primary tracking-wider flex items-center gap-1.5">
-                TRADEWISE
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-positive font-semibold uppercase">
-                  Pro
-                </span>
-              </h1>
-              <p className="text-[11px] text-text-muted">Discipline & Companion</p>
-            </div>
+            <BrandLogo
+              size="md"
+              showText={true}
+              onClick={() => {
+                setActiveTab("dashboard");
+                toggleMobileSidebar();
+              }}
+            />
           </div>
           <button
             onClick={toggleMobileSidebar}
@@ -278,28 +275,11 @@ export const Sidebar: React.FC = () => {
             isSidebarCollapsed ? "flex-col justify-center px-2 gap-2" : "justify-between px-5"
           }`}
         >
-          <div
+          <BrandLogo
+            size={isSidebarCollapsed ? "sm" : "md"}
+            showText={!isSidebarCollapsed}
             onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center gap-3 cursor-pointer group ${
-              isSidebarCollapsed ? "justify-center" : ""
-            }`}
-            title="TradeWise Pro Dashboard"
-          >
-            <div className="w-9 h-9 rounded-xl bg-brand-accent/15 border border-brand-accent/30 flex items-center justify-center text-brand-positive shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-brand-positive" />
-            </div>
-            {!isSidebarCollapsed && (
-              <div className="overflow-hidden">
-                <h1 className="text-base font-bold text-text-primary tracking-wider flex items-center gap-1.5 whitespace-nowrap">
-                  TRADEWISE
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-brand-accent/20 text-brand-positive font-semibold uppercase">
-                    Pro
-                  </span>
-                </h1>
-                <p className="text-[11px] text-text-muted whitespace-nowrap">Discipline & Companion</p>
-              </div>
-            )}
-          </div>
+          />
 
           {/* Header Toggle Button */}
           {!isSidebarCollapsed ? (
