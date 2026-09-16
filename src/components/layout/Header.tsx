@@ -14,7 +14,8 @@ import {
   Menu,
   Lock,
   Layers,
-  Compass
+  Compass,
+  Zap
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import { useMarketData } from "../../context/MarketDataContext";
@@ -43,7 +44,8 @@ export const Header: React.FC = () => {
     toggleMobileSidebar,
     isTiltLocked,
     tiltLockState,
-    setIsTiltLockModalOpen
+    setIsTiltLockModalOpen,
+    setIsScalpSniperModalOpen
   } = useApp();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -271,6 +273,17 @@ export const Header: React.FC = () => {
         >
           <Download className="w-3.5 h-3.5 text-text-muted" />
           <span className="hidden lg:inline">Download Report</span>
+        </button>
+
+        {/* "10-30m Scalp Sniper" Pill Button */}
+        <button
+          onClick={() => setIsScalpSniperModalOpen(true)}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-300 font-extrabold text-xs border border-amber-500/40 shadow-sm shadow-amber-500/15 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          title="10-30 Min Scalp Sniper (₹1L Capital Blueprint & Asymmetric 1:2 R:R)"
+        >
+          <Zap className="w-3.5 h-3.5 fill-current text-amber-400" />
+          <span className="hidden md:inline">10-30m Sniper</span>
+          <span className="md:hidden">Sniper</span>
         </button>
 
         {/* "AI Assistant" Pill Button */}

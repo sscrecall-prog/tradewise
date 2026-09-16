@@ -19,13 +19,14 @@ import {
   Sparkles,
   Layers,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Zap
 } from "lucide-react";
 import { IntradaySignalScanner } from "../components/markets/IntradaySignalScanner";
 
 export const MarketsPage: React.FC = () => {
   const { quotes, indices, openStockModal, searchAllIndianStocks, isLiveConnected, lastLiveUpdate } = useMarketData();
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist, setIsPlaceOrderModalOpen, setSelectedStockForOrder, setActiveTab } = useApp();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist, setIsPlaceOrderModalOpen, setSelectedStockForOrder, setActiveTab, setIsScalpSniperModalOpen } = useApp();
 
   const [search, setSearch] = useState("");
   const [selectedSector, setSelectedSector] = useState("ALL");
@@ -80,6 +81,42 @@ export const MarketsPage: React.FC = () => {
             <strong>2,540</strong> Listed Equities Indexed
           </span>
         </div>
+      </div>
+
+      {/* 10-30 Min Scalp Sniper (₹1L Blueprint) Banner */}
+      <div 
+        onClick={() => setIsScalpSniperModalOpen(true)}
+        className="p-4 rounded-3xl bg-gradient-to-r from-amber-950/40 via-bg-card to-yellow-950/30 border border-amber-500/30 hover:border-amber-500/60 cursor-pointer transition-all shadow-lg group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center ring-1 ring-amber-500/40 group-hover:scale-105 transition-transform flex-shrink-0">
+            <Zap className="w-5 h-5 fill-current" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-black text-white group-hover:text-amber-400 transition-colors">
+                10–30 Min Scalp Sniper (₹1L Blueprint)
+              </h3>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold border border-amber-500/30">
+                1:2 ASYMMETRIC R:R • ₹1,500–₹3,000 TARGET
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-0.5">
+              High-Beta (1.3x+) 15M ORB &amp; VWAP Momentum Scanner. Targets 0.35%–0.65% quick moves with strictly capped risk and 1-Trade-Per-Day Shield.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsScalpSniperModalOpen(true);
+          }}
+          className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-dark-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-400/20 transition-all group-hover:scale-105 flex-shrink-0"
+        >
+          <Zap className="w-3.5 h-3.5 fill-current" />
+          <span>Launch Sniper</span>
+        </button>
       </div>
 
       {/* TradePulse Pro Engine Launch Banner */}

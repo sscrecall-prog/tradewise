@@ -111,6 +111,8 @@ interface AppContextType {
   setIsPlaceOrderModalOpen: (open: boolean) => void;
   selectedStockForOrder: string | null;
   setSelectedStockForOrder: (symbol: string | null) => void;
+  isScalpSniperModalOpen: boolean;
+  setIsScalpSniperModalOpen: (open: boolean) => void;
 
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
@@ -182,6 +184,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedStockForOrder, setSelectedStockForOrder] = useState<string | null>(null);
   const [selectedContractNoteOrder, setSelectedContractNoteOrder] = useState<PaperOrder | null>(null);
   const [isContractNoteModalOpen, setIsContractNoteModalOpen] = useState(false);
+  const [isScalpSniperModalOpen, setIsScalpSniperModalOpen] = useState(false);
 
   // Pro Trader Suite: Prop-Desk Tilt Lock State
   const [tiltLockState, setTiltLockState] = useState<TiltLockState>(() => {
@@ -979,6 +982,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsPlaceOrderModalOpen,
         selectedStockForOrder,
         setSelectedStockForOrder,
+        isScalpSniperModalOpen,
+        setIsScalpSniperModalOpen,
 
         isSidebarCollapsed,
         setIsSidebarCollapsed,

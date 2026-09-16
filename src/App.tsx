@@ -20,6 +20,7 @@ import { StockDetailModal } from "./components/modals/StockDetailModal";
 import { PlaceOrderModal } from "./components/modals/PlaceOrderModal";
 import { ContractNoteModal } from "./components/modals/ContractNoteModal";
 import { TiltLockModal } from "./components/modals/TiltLockModal";
+import { ScalpSniperModal } from "./components/scalp/ScalpSniperModal";
 import { ToastContainer } from "./components/common/ToastContainer";
 
 export const App: React.FC = () => {
@@ -27,7 +28,9 @@ export const App: React.FC = () => {
     activeTab,
     selectedContractNoteOrder,
     isContractNoteModalOpen,
-    setIsContractNoteModalOpen
+    setIsContractNoteModalOpen,
+    isScalpSniperModalOpen,
+    setIsScalpSniperModalOpen
   } = useApp();
 
   const renderActivePage = () => {
@@ -78,6 +81,10 @@ export const App: React.FC = () => {
         onClose={() => setIsContractNoteModalOpen(false)}
       />
       <TiltLockModal />
+      <ScalpSniperModal
+        isOpen={isScalpSniperModalOpen}
+        onClose={() => setIsScalpSniperModalOpen(false)}
+      />
       <ToastContainer />
     </AppLayout>
   );
