@@ -42,110 +42,110 @@ const POPULAR_NSE_STOCKS: Omit<MarketQuote, 'sparkline' | 'lastUpdated'>[] = [
   {
     symbol: 'RELIANCE',
     name: 'Reliance Industries Ltd.',
-    price: 1307.00,
-    change: 12.50,
-    changePercent: 0.96,
-    open: 1304.10,
-    high: 1324.20,
-    low: 1305.70,
-    close: 1307.00,
-    prevClose: 1322.00,
-    volume: 8452100,
+    price: 1240.00,
+    change: 4.70,
+    changePercent: 0.38,
+    open: 1243.30,
+    high: 1255.00,
+    low: 1240.00,
+    close: 1240.00,
+    prevClose: 1235.30,
+    volume: 10022513,
     high52W: 1611.80,
-    low52W: 1249.80,
+    low52W: 1235.30,
     sector: 'Energy & Oil',
-    pe: 28.4,
-    marketCap: '₹18.2L Cr'
+    pe: 27.1,
+    marketCap: '₹17.8L Cr'
   },
   {
     symbol: 'HDFCBANK',
     name: 'HDFC Bank Ltd.',
-    price: 708.35,
-    change: 5.45,
-    changePercent: 0.77,
-    open: 708.35,
-    high: 716.50,
-    low: 708.35,
-    close: 712.10,
-    prevClose: 706.65,
-    volume: 14230000,
+    price: 721.50,
+    change: 4.95,
+    changePercent: 0.69,
+    open: 714.00,
+    high: 725.40,
+    low: 710.85,
+    close: 721.50,
+    prevClose: 716.55,
+    volume: 27464411,
     high52W: 1020.50,
-    low52W: 698.50,
+    low52W: 681.90,
     sector: 'Banking',
     pe: 19.8,
-    marketCap: '₹12.5L Cr'
+    marketCap: '₹12.8L Cr'
   },
   {
     symbol: 'ICICIBANK',
     name: 'ICICI Bank Ltd.',
-    price: 1423.20,
-    change: -6.80,
-    changePercent: -0.48,
-    open: 1432.10,
-    high: 1438.30,
-    low: 1421.40,
-    close: 1423.20,
-    prevClose: 1430.00,
-    volume: 6693889,
+    price: 1358.80,
+    change: 8.40,
+    changePercent: 0.62,
+    open: 1358.20,
+    high: 1361.40,
+    low: 1348.00,
+    close: 1358.80,
+    prevClose: 1350.40,
+    volume: 9625098,
     high52W: 1480.00,
     low52W: 1187.60,
     sector: 'Banking',
-    pe: 18.3,
-    marketCap: '₹8.5L Cr'
+    pe: 17.8,
+    marketCap: '₹8.9L Cr'
   },
   {
     symbol: 'SBIN',
     name: 'State Bank of India',
-    price: 1016.10,
-    change: -7.30,
-    changePercent: -0.71,
-    open: 1026.00,
-    high: 1029.20,
-    low: 1016.10,
-    close: 1016.10,
-    prevClose: 1023.40,
-    volume: 6724566,
+    price: 991.40,
+    change: 23.40,
+    changePercent: 2.42,
+    open: 975.10,
+    high: 991.40,
+    low: 973.20,
+    close: 991.40,
+    prevClose: 968.00,
+    volume: 8608608,
     high52W: 1234.70,
-    low52W: 803.00,
+    low52W: 831.00,
     sector: 'Banking',
-    pe: 10.9,
-    marketCap: '₹7.2L Cr'
+    pe: 10.5,
+    marketCap: '₹7.6L Cr'
   },
   {
     symbol: 'TCS',
     name: 'Tata Consultancy Services Ltd.',
-    price: 2304.00,
-    change: -16.10,
-    changePercent: -0.69,
-    open: 2330.00,
-    high: 2363.90,
-    low: 2302.40,
-    close: 2304.00,
-    prevClose: 2320.10,
-    volume: 2564322,
+    price: 2188.80,
+    change: -62.20,
+    changePercent: -2.76,
+    open: 2267.80,
+    high: 2273.90,
+    low: 2172.00,
+    close: 2188.80,
+    prevClose: 2251.00,
+    volume: 2762215,
     high52W: 3350.00,
     low52W: 1976.80,
     sector: 'IT Software',
-    pe: 31.6,
-    marketCap: '₹15.6L Cr'
+    pe: 29.8,
+    marketCap: '₹14.9L Cr'
   },
   {
     symbol: 'INFY',
     name: 'Infosys Ltd.',
-    price: 1130.00,
-    change: -0.30,
-    changePercent: -0.03,
-    open: 1133.00,
-    high: 1146.70,
-    low: 1125.40,
-    close: 1130.00,
-    prevClose: 1130.30,
-    volume: 5881388,
+    price: 1060.00,
+    change: -17.00,
+    changePercent: -1.58,
+    open: 1083.80,
+    high: 1085.10,
+    low: 1053.50,
+    close: 1060.00,
+    prevClose: 1077.00,
+    volume: 6229356,
     high52W: 1728.00,
     low52W: 982.40,
     sector: 'IT Software',
-    pe: 27.2,
-    marketCap: '₹7.6L Cr'
+    pe: 25.4,
+    marketCap: '₹7.2L Cr'
   },
   {
     symbol: 'BHARTIARTL',
@@ -1158,16 +1158,35 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
 
   private async fetchChart(yfSymbol: string, range = '1d', interval = '5m'): Promise<any> {
     try {
-      const url = `${this.getApiUrl('/v8/finance/chart/')}${encodeURIComponent(yfSymbol)}?range=${range}&interval=${interval}`;
+      // Primary: Query via serverless market proxy
+      const url = `/api/market?symbol=${encodeURIComponent(yfSymbol)}&range=${range}&interval=${interval}`;
       const res = await fetch(url, {
         headers: { Accept: 'application/json' }
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return data?.chart?.result?.[0] || null;
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.chart?.result?.[0]) {
+          return data.chart.result[0];
+        }
+      }
     } catch (e) {
-      return null;
+      // Failover to direct path
     }
+
+    try {
+      const fallbackUrl = `/api/market/v8/finance/chart/${encodeURIComponent(yfSymbol)}?range=${range}&interval=${interval}`;
+      const res = await fetch(fallbackUrl, {
+        headers: { Accept: 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data?.chart?.result?.[0] || null;
+      }
+    } catch {
+      // Fallback
+    }
+
+    return null;
   }
 
   /**
@@ -1236,11 +1255,26 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
           const chart = await this.fetchChart(item.yf, '1d', '5m');
           if (chart && chart.meta) {
             const meta = chart.meta;
-            const price = Math.round((meta.regularMarketPrice || 0) * 100) / 100;
-            const prev = Math.round((meta.chartPreviousClose || meta.previousClose || price) * 100) / 100;
-            const change = Math.round((price - prev) * 100) / 100;
-            const changePercent = prev > 0 ? Math.round((change / prev) * 10000) / 100 : 0;
+            const price = Math.round((meta.regularMarketPrice || meta.fulldayPrice || 0) * 100) / 100;
 
+            // Prioritize Yahoo Finance's explicit fulldayChange & regularMarketChangePercent (matches official NSE exchange settlement)
+            let change = 0;
+            let changePercent = 0;
+            if (typeof meta.fulldayChange === 'number') {
+              change = Math.round(meta.fulldayChange * 100) / 100;
+              changePercent = typeof meta.fulldayChangePercent === 'number'
+                ? Math.round(meta.fulldayChangePercent * 100) / 100
+                : (typeof meta.regularMarketChangePercent === 'number' ? Math.round(meta.regularMarketChangePercent * 100) / 100 : 0);
+            } else if (typeof meta.regularMarketChangePercent === 'number' && meta.previousClose) {
+              changePercent = Math.round(meta.regularMarketChangePercent * 100) / 100;
+              change = Math.round((price - meta.previousClose) * 100) / 100;
+            } else {
+              const prev = Math.round((meta.previousClose || meta.chartPreviousClose || price) * 100) / 100;
+              change = Math.round((price - prev) * 100) / 100;
+              changePercent = prev > 0 ? Math.round((change / prev) * 10000) / 100 : 0;
+            }
+
+            const prev = Math.round((price - change) * 100) / 100;
             const quotesArr: number[] = (chart.indicators?.quote?.[0]?.close || []).filter(
               (v: any) => typeof v === 'number' && !isNaN(v)
             );
@@ -1326,10 +1360,25 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
                 sector: 'Equity'
               };
 
-              const price = Math.round((meta.regularMarketPrice || base.price) * 100) / 100;
-              const prevClose = Math.round((meta.chartPreviousClose || meta.previousClose || base.prevClose) * 100) / 100;
-              const change = Math.round((price - prevClose) * 100) / 100;
-              const changePercent = prevClose > 0 ? Math.round((change / prevClose) * 10000) / 100 : 0;
+              const price = Math.round((meta.regularMarketPrice || meta.fulldayPrice || base.price) * 100) / 100;
+              let change = 0;
+              let changePercent = 0;
+              let prevClose = Math.round((meta.chartPreviousClose || meta.previousClose || base.prevClose) * 100) / 100;
+
+              if (typeof meta.fulldayChange === 'number') {
+                change = Math.round(meta.fulldayChange * 100) / 100;
+                changePercent = typeof meta.fulldayChangePercent === 'number'
+                  ? Math.round(meta.fulldayChangePercent * 100) / 100
+                  : (typeof meta.regularMarketChangePercent === 'number' ? Math.round(meta.regularMarketChangePercent * 100) / 100 : 0);
+                prevClose = Math.round((price - change) * 100) / 100;
+              } else if (typeof meta.regularMarketChangePercent === 'number' && meta.previousClose) {
+                changePercent = Math.round(meta.regularMarketChangePercent * 100) / 100;
+                change = Math.round((price - meta.previousClose) * 100) / 100;
+                prevClose = meta.previousClose;
+              } else {
+                change = Math.round((price - prevClose) * 100) / 100;
+                changePercent = prevClose > 0 ? Math.round((change / prevClose) * 10000) / 100 : 0;
+              }
 
               const open = Math.round((meta.regularMarketOpen || base.open) * 100) / 100;
               const high = Math.round((meta.regularMarketDayHigh || Math.max(base.high, price)) * 100) / 100;
@@ -1491,10 +1540,25 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
 
     if (chart && chart.meta) {
       const meta = chart.meta;
-      const price = Math.round((meta.regularMarketPrice || 100) * 100) / 100;
-      const prevClose = Math.round((meta.chartPreviousClose || meta.previousClose || price) * 100) / 100;
-      const change = Math.round((price - prevClose) * 100) / 100;
-      const changePercent = prevClose > 0 ? Math.round((change / prevClose) * 10000) / 100 : 0;
+      const price = Math.round((meta.regularMarketPrice || meta.fulldayPrice || 100) * 100) / 100;
+      let change = 0;
+      let changePercent = 0;
+      let prevClose = Math.round((meta.chartPreviousClose || meta.previousClose || price) * 100) / 100;
+
+      if (typeof meta.fulldayChange === 'number') {
+        change = Math.round(meta.fulldayChange * 100) / 100;
+        changePercent = typeof meta.fulldayChangePercent === 'number'
+          ? Math.round(meta.fulldayChangePercent * 100) / 100
+          : (typeof meta.regularMarketChangePercent === 'number' ? Math.round(meta.regularMarketChangePercent * 100) / 100 : 0);
+        prevClose = Math.round((price - change) * 100) / 100;
+      } else if (typeof meta.regularMarketChangePercent === 'number' && meta.previousClose) {
+        changePercent = Math.round(meta.regularMarketChangePercent * 100) / 100;
+        change = Math.round((price - meta.previousClose) * 100) / 100;
+        prevClose = meta.previousClose;
+      } else {
+        change = Math.round((price - prevClose) * 100) / 100;
+        changePercent = prevClose > 0 ? Math.round((change / prevClose) * 10000) / 100 : 0;
+      }
 
       const quotesArr: number[] = (chart.indicators?.quote?.[0]?.close || []).filter(
         (v: any) => typeof v === 'number' && !isNaN(v)
@@ -1698,10 +1762,10 @@ export class LiveMarketDataProvider implements IMarketDataProvider {
 
   private getFallbackIndex(symbol: string, name: string): IndexData {
     const prices: Record<string, { price: number; change: number; pct: number }> = {
-      NIFTY: { price: 23914.45, change: -165.95, pct: -0.69 },
-      BANKNIFTY: { price: 57172.00, change: -852.90, pct: -1.47 },
-      SENSEX: { price: 76570.35, change: -386.95, pct: -0.50 },
-      FINNIFTY: { price: 25813.05, change: -190.85, pct: -0.73 }
+      NIFTY: { price: 23217.60, change: 99.00, pct: 0.43 },
+      BANKNIFTY: { price: 56292.45, change: 497.70, pct: 0.89 },
+      SENSEX: { price: 74336.45, change: 332.63, pct: 0.45 },
+      FINNIFTY: { price: 25262.40, change: 185.75, pct: 0.74 }
     };
     const p = prices[symbol] || { price: 24000, change: 50, pct: 0.2 };
     return {

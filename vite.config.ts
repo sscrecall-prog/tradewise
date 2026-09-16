@@ -10,9 +10,20 @@ export default defineConfig({
       '/api/market': {
         target: 'https://query1.finance.yahoo.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/market/, ''),
+        rewrite: (path) => {
+          try {
+            const url = new URL(path, 'http://localhost');
+            const symbol = url.searchParams.get('symbol');
+            const range = url.searchParams.get('range') || '1d';
+            const interval = url.searchParams.get('interval') || '5m';
+            if (symbol) {
+              return `/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`;
+            }
+          } catch {}
+          return path.replace(/^\/api\/market/, '');
+        },
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
       }
     }

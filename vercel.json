@@ -1,11 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/api/market/:path*",
-      "destination": "https://query1.finance.yahoo.com/:path*"
+      "source": "/api/market",
+      "destination": "/api/market"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
