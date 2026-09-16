@@ -9,8 +9,6 @@ import {
   Sparkles,
   Download,
   Flame,
-  PanelLeftClose,
-  PanelLeftOpen,
   Menu,
   Lock,
   Layers,
@@ -39,8 +37,6 @@ export const Header: React.FC = () => {
     setIsNewTradeModalOpen,
     profile,
     journal,
-    isSidebarCollapsed,
-    toggleSidebar,
     toggleMobileSidebar,
     isTiltLocked,
     tiltLockState,
@@ -149,24 +145,6 @@ export const Header: React.FC = () => {
             onClick={() => setActiveTab("dashboard")}
           />
         </div>
-
-        {/* Desktop Sidebar Toggle Button */}
-        <button
-          onClick={toggleSidebar}
-          className={`hidden md:flex items-center justify-center w-8 h-8 rounded-xl border transition-all flex-shrink-0 ${
-            isSidebarCollapsed
-              ? "bg-brand-accent/15 text-brand-positive border-brand-accent/30 hover:bg-brand-accent/25 shadow-lime-sm"
-              : "bg-bg-secondary text-text-secondary hover:text-brand-accent border-border-subtle hover:bg-bg-elevated"
-          }`}
-          title={isSidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
-          aria-label="Toggle sidebar"
-        >
-          {isSidebarCollapsed ? (
-            <PanelLeftOpen className="w-4 h-4" />
-          ) : (
-            <PanelLeftClose className="w-4 h-4" />
-          )}
-        </button>
 
         {/* Pill Search Input */}
         <div className="relative w-full">

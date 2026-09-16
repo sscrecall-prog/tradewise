@@ -14,8 +14,6 @@ import {
   Flame,
   PanelLeftClose,
   PanelLeftOpen,
-  ChevronLeft,
-  ChevronRight,
   X,
   Layers,
   Compass,
@@ -330,20 +328,6 @@ export const Sidebar: React.FC = () => {
           isSidebarCollapsed ? "w-20" : "w-64"
         }`}
       >
-        {/* Floating Border Edge Chevron Handle */}
-        <button
-          onClick={toggleSidebar}
-          className="absolute -right-3 top-7 z-40 w-6 h-6 rounded-full bg-bg-card hover:bg-bg-elevated text-text-secondary hover:text-brand-accent border border-border-subtle shadow-md flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-          title={isSidebarCollapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)"}
-          aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isSidebarCollapsed ? (
-            <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
-          ) : (
-            <ChevronLeft className="w-3.5 h-3.5 stroke-[2.5]" />
-          )}
-        </button>
-
         {/* Brand Header */}
         <div
           className={`flex items-center py-5 border-b border-border-subtle ${
@@ -373,7 +357,7 @@ export const Sidebar: React.FC = () => {
               title="Expand sidebar (Ctrl+B)"
               aria-label="Expand sidebar"
             >
-              <PanelLeftOpen className="w-4 h-4 text-brand-positive" />
+              <PanelLeftOpen className="w-4 h-4 text-emerald-700 dark:text-brand-positive" />
             </button>
           )}
         </div>
